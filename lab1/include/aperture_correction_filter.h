@@ -1,14 +1,14 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 
-void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
+void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size, float percentage) {
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     double k = 0; // коэффициент нормировки
     std::vector<std::vector<float>> Fk;
 
     int frameWidth = aperture_size/2;
 
-    int index = int(100/20 - 1) + 8;
+    int index = int(100/percentage - 1) + 8;
 
     for (int i = 0; i < frameWidth; i++)
     {

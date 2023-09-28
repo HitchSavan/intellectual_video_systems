@@ -12,6 +12,7 @@ int main(int argc, char** argv) {
     int mosaic_aperture_size = 3;
     int aper_correction_aperture_size = 3;
     int median_aperture_size = 3;
+    float aper_correction_percentage;
 
     std::cout << "Input filter id (1-4): ";
 
@@ -41,8 +42,10 @@ int main(int argc, char** argv) {
         }
         case 3:
         {
+            std::cout << "Input percentage (20-30): ";
+            std::cin >> aper_correction_percentage;
             cv::Mat aper_cor_img;
-            aperture_correction(image, aper_cor_img, aper_correction_aperture_size);
+            aperture_correction(image, aper_cor_img, aper_correction_aperture_size, aper_correction_percentage);
             cv::imshow("mosaic output "+filename, aper_cor_img);
             break;
         }
