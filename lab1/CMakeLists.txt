@@ -4,6 +4,8 @@ project(lab1)
 include(CTest)
 enable_testing()
 
+include_directories( include )
+
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
 
@@ -20,6 +22,7 @@ file(
         "${CMAKE_CURRENT_LIST_DIR}/*.jpg"
         "${CMAKE_CURRENT_LIST_DIR}/*.png"
 )
+
 
 add_executable(${PROJECT_NAME} ${sources})
 add_custom_command(TARGET lab1 
