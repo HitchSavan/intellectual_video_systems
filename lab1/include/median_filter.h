@@ -4,7 +4,6 @@
 
 void median_f(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
-    double k = 0; // коэффициент нормировки
     std::vector<float> Fk;
     
     int frameWidth = aperture_size/2;

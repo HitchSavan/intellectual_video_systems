@@ -61,8 +61,7 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
             for (int ii = -frameWidth; ii <= frameWidth; ii++)
                 for (int jj = -frameWidth; jj <= frameWidth; jj++)
                 {
-                    uchar blurred = input_img.at<uchar>(j + jj,
-                    i + ii);
+                    uchar blurred = input_img.at<uchar>(j + jj, i + ii);
                     Rez += Fk[ii + frameWidth][jj + frameWidth] * blurred;
                 }
             uchar blurred = Rez / k; // осуществляем нормировку

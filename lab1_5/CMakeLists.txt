@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.5.0)
-project(lab1)
+project(lab1.5)
 
 include(CTest)
 enable_testing()
 
-include_directories( include ../ )
+include_directories( include ../)
 
 find_package( OpenCV REQUIRED )
 include_directories(${OpenCV_INCLUDE_DIRS})
@@ -23,11 +23,11 @@ file(
 
 
 add_executable(${PROJECT_NAME} ${sources})
-add_custom_command(TARGET lab1 
+add_custom_command(TARGET lab1.5
                    POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lab1> ${CMAKE_CURRENT_LIST_DIR})
+                   COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lab1.5> ${CMAKE_CURRENT_LIST_DIR})
 
-target_link_libraries(lab1 ${OpenCV_LIBS})
+target_link_libraries(lab1.5 ${OpenCV_LIBS})
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
