@@ -1,7 +1,10 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <utils/utils.h>
 
 void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size, float percentage) {
+    std::cout << "\nAperture correction filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     double k = 0; // коэффициент нормировки
     std::vector<std::vector<float>> Fk;
@@ -53,6 +56,7 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
 
 
     for (int i = frameWidth; i < input_img.cols - frameWidth; i++)
+    {
         for (int j = frameWidth; j < input_img.rows - frameWidth; j++)
         {
             uchar pix_value = input_img.at<uchar>(j, i);
@@ -67,4 +71,7 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
             uchar blurred = Rez / k; // осуществляем нормировку
             output_img.at<uchar>(j, i) = blurred;
         }
+        if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
+            progressbar(input_img.cols - frameWidth, i);
+    }
 }

@@ -7,6 +7,9 @@
 #include <aperture_correction_filter.h>
 
 int main(int argc, char** argv) {
+    std::ios_base::sync_with_stdio(false);
+    std::cin.tie(NULL);
+
     std::string filename = "../kitten.png";
     std::string output_folder = "output";
 
@@ -16,18 +19,17 @@ int main(int argc, char** argv) {
     int median_aperture_size = 3;
     float aper_correction_percentage = 8;
 
-    std::cout << "Input filter id (1-4): ";
-
+    std::cout << "Input filter id for showing (1-4, 0 for skip): ";
     int filterId = 1;
     std::cin >> filterId;
 
     cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
-    cv::imshow("input "+filename, image);
 
     switch (filterId)
     {
         case 1:
         {
+            std::cout << "Gaussian filter\n";
             std::cout << "Input aperture size (3, 5, 7 ...): ";
             std::cin >> gauss_aperture_size;
             cv::Mat gauss_img;
@@ -37,6 +39,7 @@ int main(int argc, char** argv) {
         }
         case 2:
         {
+            std::cout << "Mosaic filter\n";
             cv::Mat mosaic_img;
             mosaic(image, mosaic_img, mosaic_aperture_size);
             cv::imshow("mosaic output "+filename, mosaic_img);
@@ -44,6 +47,7 @@ int main(int argc, char** argv) {
         }
         case 3:
         {
+            std::cout << "Aperture correction filter\n";
             std::cout << "Input percentage (20-30 max): ";
             std::cin >> aper_correction_percentage;
             cv::Mat aper_cor_img;
@@ -53,6 +57,7 @@ int main(int argc, char** argv) {
         }
         case 4:
         {
+            std::cout << "Median filter\n";
             cv::Mat median_img;
             median_f(image, median_img, median_aperture_size);
             cv::imshow("median output "+filename, median_img);
@@ -63,8 +68,8 @@ int main(int argc, char** argv) {
             break;
     }
 
+    std::cout << "\nSave all? (0/1) ";
     int confirm = 0;
-    std::cout << "Save all? (0/1) ";
     std::cin >> confirm;
     if (confirm)
     {
@@ -73,8 +78,11 @@ int main(int argc, char** argv) {
         output_folder += "/";
 
         cv::Mat gauss_img;
-        gauss(image, gauss_img, gauss_aperture_size);
-        cv::imwrite(output_folder + "gauss_img.jpg", gauss_img);
+        gauss(image, gauss_img, 3);
+        cv::imwrite(output_folder + "gauss3_img.jpg", gauss_img);
+
+        gauss(image, gauss_img, 5);
+        cv::imwrite(output_folder + "gauss5_img.jpg", gauss_img);
 
         cv::Mat mosaic_img;
         mosaic(image, mosaic_img, mosaic_aperture_size);
@@ -89,5 +97,7 @@ int main(int argc, char** argv) {
         cv::imwrite(output_folder + "median_img.jpg", median_img);
     }
 
-    cv::waitKey(0);
+    cv::imshow("input "+filename, image);
+    if (filterId != 0)
+        cv::waitKey(0);
 }

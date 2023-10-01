@@ -1,14 +1,18 @@
 #include <vector>
 #include <numeric>
 #include <opencv2/opencv.hpp>
+#include <utils/utils.h>
 
 void median_f(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
+    std::cout << "\nMedian filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     std::vector<float> Fk;
     
     int frameWidth = aperture_size/2;
 
     for (int i = frameWidth; i < input_img.cols - frameWidth; i++)
+    {
         for (int j = frameWidth; j < input_img.rows - frameWidth; j++)
         {
             uchar pix_value = input_img.at<uchar>(j, i);
@@ -24,4 +28,7 @@ void median_f(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) 
             Fk.clear();
             output_img.at<uchar>(j, i) = blurred;
         }
+        if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
+            progressbar(input_img.cols - frameWidth, i);
+    }
 }

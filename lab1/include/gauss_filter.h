@@ -1,7 +1,11 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <utils/utils.h>
 
-void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
+void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size = 3) {
+    std::cout << "\nGaussian filter with ";
+    std::cout << aperture_size << " aperture\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     double k = 0; // коэффициент нормировки
     std::vector<std::vector<float>> Fk;
@@ -51,6 +55,7 @@ void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
 
 
     for (int i = frameWidth; i < input_img.cols - frameWidth; i++)
+    {
         for (int j = frameWidth; j < input_img.rows - frameWidth; j++)
         {
             uchar pix_value = input_img.at<uchar>(j, i);
@@ -65,4 +70,7 @@ void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
             uchar blurred = Rez / k; // осуществляем нормировку
             output_img.at<uchar>(j, i) = blurred;
         }
+        if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
+            progressbar(input_img.cols - frameWidth, i);
+    }
 }
