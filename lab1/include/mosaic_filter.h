@@ -52,7 +52,7 @@ void mosaic(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size = 3
         for (auto j: i)
         {
             k += j;
-            std::cout << j << " ";
+            std::cout << int(j) << " ";
         }
         std::cout << std::endl;
     }

@@ -1,10 +1,12 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
-
+#include <utils/utils.h>
 #include <base_outline.h>
 
 void sobel_horizontal(const cv::Mat &input_img, cv::Mat &output_img)
 {
+    std::cout << "\nSobel horizontal filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     std::vector<std::vector<float>> Fk;
 
@@ -19,6 +21,8 @@ void sobel_horizontal(const cv::Mat &input_img, cv::Mat &output_img)
 
 void sobel_vertical(const cv::Mat &input_img, cv::Mat &output_img)
 {
+    std::cout << "\nSobel vertical filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     std::vector<std::vector<float>> Fk;
 
@@ -33,6 +37,8 @@ void sobel_vertical(const cv::Mat &input_img, cv::Mat &output_img)
 
 void sobel_diagonal(const cv::Mat &input_img, cv::Mat &output_img)
 {
+    std::cout << "\nSobel diagonal filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     std::vector<std::vector<float>> Fk;
 
@@ -47,6 +53,8 @@ void sobel_diagonal(const cv::Mat &input_img, cv::Mat &output_img)
 
 void sobel_general(const cv::Mat &input_img, cv::Mat &output_img)
 {
+    std::cout << "\nSobel general filter\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
 
     int frameWidth = 3/2;
@@ -65,5 +73,7 @@ void sobel_general(const cv::Mat &input_img, cv::Mat &output_img)
             
             output_img.at<uchar>(j, i) = Rez;
         }
+        if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
+            progressbar(input_img.cols - frameWidth, i);
     }
 }

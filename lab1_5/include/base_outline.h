@@ -2,6 +2,7 @@
 
 #include <vector>
 #include <opencv2/opencv.hpp>
+#include <utils/utils.h>
 
 void base_outline(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std::vector<float>> &Fk)
 {
@@ -12,7 +13,7 @@ void base_outline(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std
     {
         for (auto j: i)
         {
-            std::cout << j << " ";
+            std::cout << int(j) << " ";
         }
         std::cout << std::endl;
     }
@@ -32,5 +33,7 @@ void base_outline(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std
                 }
             output_img.at<uchar>(j, i) = Rez;
         }
+        if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
+            progressbar(input_img.cols - frameWidth, i);
     }
 }

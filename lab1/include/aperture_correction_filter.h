@@ -11,7 +11,7 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
 
     int frameWidth = aperture_size/2;
 
-    int index = int(100/percentage - 1) + 8;
+    int index = ceil((100.0/percentage - 1) + 8);
 
     for (int i = 0; i < frameWidth; i++)
     {
@@ -49,11 +49,10 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
         for (auto j: i)
         {
             k += j;
-            std::cout << j << " ";
+            std::cout << int(j) << " ";
         }
         std::cout << std::endl;
     }
-
 
     for (int i = frameWidth; i < input_img.cols - frameWidth; i++)
     {

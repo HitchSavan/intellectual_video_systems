@@ -1,10 +1,11 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
-
 #include <base_outline.h>
 
 void laplas_outline(const cv::Mat &input_img, cv::Mat &output_img)
 {
+    std::cout << "\nLaplas outline\n";
+
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
     std::vector<std::vector<float>> Fk;
 

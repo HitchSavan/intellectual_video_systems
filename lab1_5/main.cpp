@@ -10,14 +10,12 @@ int main(int argc, char** argv) {
     std::string filename = "../kitten.png";
     std::string output_folder = "output";
 
-
-    std::cout << "Input outliner id (1-10): ";
+    std::cout << "Input outliner id for showing only one pic (1-10, 0 for skip): ";
 
     int outlineId = 1;
     std::cin >> outlineId;
 
     cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
-    cv::imshow("input "+filename, image);
 
     cv::Mat gauss3_img;
     cv::Mat gauss5_img;
@@ -25,13 +23,11 @@ int main(int argc, char** argv) {
     gauss(image, gauss3_img, 3);
     gauss(image, gauss5_img, 5);
     cv::absdiff(gauss3_img, gauss5_img, gauss_diff);
-    cv::imshow("gauss dif "+filename, gauss_diff*7);
 
     cv::Mat canny_img;
     float thr1 = 50;
     float thr2 = 200;
     cv::Canny(image, canny_img, thr1, thr2);
-    cv::imshow("canny  "+filename, canny_img);
 
     switch (outlineId)
     {
@@ -39,28 +35,28 @@ int main(int argc, char** argv) {
         {
             cv::Mat sobel_horizontal_img;
             sobel_horizontal(image, sobel_horizontal_img);
-            cv::imshow("horizontal sobel output "+filename, sobel_horizontal_img);
+            show_img("horizontal sobel output "+filename, sobel_horizontal_img);
             break;
         }
         case 2:
         {
             cv::Mat sobel_vertical_img;
             sobel_vertical(image, sobel_vertical_img);
-            cv::imshow("vertical sobel output "+filename, sobel_vertical_img);
+            show_img("vertical sobel output "+filename, sobel_vertical_img);
             break;
         }
         case 3:
         {
             cv::Mat sobel_diagonal_img;
             sobel_diagonal(image, sobel_diagonal_img);
-            cv::imshow("diagonal sobel output "+filename, sobel_diagonal_img);
+            show_img("diagonal sobel output "+filename, sobel_diagonal_img);
             break;
         }
         case 4:
         {
             cv::Mat sobel_general_img;
             sobel_general(image, sobel_general_img);
-            cv::imshow("general sobel output "+filename, sobel_general_img);
+            show_img("general sobel output "+filename, sobel_general_img);
             break;
         }
         case 5:
@@ -87,7 +83,7 @@ int main(int argc, char** argv) {
         {
             cv::Mat laplas_img;
             laplas_outline(image, laplas_img);
-            cv::imshow("laplas outline output "+filename, laplas_img);
+            show_img("laplas outline output "+filename, laplas_img);
             break;
         }
         
@@ -96,13 +92,21 @@ int main(int argc, char** argv) {
     }
 
     int confirm = 0;
-    std::cout << "Save all? (0/1) ";
+    std::cout << "\nSave all? (0/1) ";
     std::cin >> confirm;
+
     if (confirm)
     {
+        std::cout << "\nShow all? (0/1) ";
+        std::cin >> confirm;
+
         std::string create_folder = "mkdir " + output_folder;
         system(create_folder.c_str());
         output_folder += "/";
+
+        cv::imwrite(output_folder + "gauss_diff.jpg", gauss_diff);
+
+        cv::imwrite(output_folder + "canny_img.jpg", canny_img);
         
         cv::Mat sobel_horizontal_img;
         sobel_horizontal(image, sobel_horizontal_img);
@@ -120,14 +124,23 @@ int main(int argc, char** argv) {
         sobel_general(image, sobel_general_img);
         cv::imwrite(output_folder + "sobel_general_img.jpg", sobel_general_img);
 
-        cv::imwrite(output_folder + "gauss_diff.jpg", gauss_diff*7);
-
-        cv::imwrite(output_folder + "canny_img.jpg", canny_img);
-
         cv::Mat laplas_img;
         laplas_outline(image, laplas_img);
         cv::imwrite(output_folder + "laplas_img.jpg", laplas_img);
+        if (confirm)
+        {
+            show_img("gauss dif "+filename, gauss_diff);
+            show_img("canny  "+filename, canny_img);
+            show_img("horizontal sobel output "+filename, sobel_horizontal_img);
+            show_img("vertical sobel output "+filename, sobel_vertical_img);
+            show_img("diagonal sobel output "+filename, sobel_diagonal_img);
+            show_img("general sobel output "+filename, sobel_general_img);
+            show_img("laplas outline output "+filename, laplas_img);
+        }
     }
+    std::cout << "\n";
 
-    cv::waitKey(0);
+    show_img("input "+filename, image);
+    if (confirm != 0)
+        cv::waitKey(0);
 }
