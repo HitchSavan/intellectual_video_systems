@@ -31,7 +31,7 @@ void base_outline(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std
                     uchar blurred = input_img.at<uchar>(j + jj, i + ii);
                     Rez += Fk[ii + frameWidth][jj + frameWidth] * blurred;
                 }
-            output_img.at<uchar>(j, i) = Rez;
+            output_img.at<uchar>(j, i) = (Rez > 255) ? 255 : ((Rez < 0) ? 0 : Rez);
         }
         if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
             progressbar(input_img.cols - frameWidth, i);

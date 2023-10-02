@@ -10,6 +10,8 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
     std::vector<std::vector<float>> Fk;
 
     int frameWidth = aperture_size/2;
+    
+    std::cout << "\n\n" << frameWidth << "\n\n";
 
     int index = ceil((100.0/percentage - 1) + 8);
 
@@ -67,7 +69,7 @@ void aperture_correction(const cv::Mat &input_img, cv::Mat &output_img, int aper
                     uchar blurred = input_img.at<uchar>(j + jj, i + ii);
                     Rez += Fk[ii + frameWidth][jj + frameWidth] * blurred;
                 }
-            uchar blurred = Rez / k; // осуществляем нормировку
+            uchar blurred = ((Rez / k) > 255) ? 255 : (((Rez / k) < 0) ? 0 : (Rez / k)); // осуществляем нормировку
             output_img.at<uchar>(j, i) = blurred;
         }
         if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)

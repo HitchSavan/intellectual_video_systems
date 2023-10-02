@@ -104,7 +104,7 @@ int main(int argc, char** argv) {
         system(create_folder.c_str());
         output_folder += "/";
 
-        cv::imwrite(output_folder + "gauss_diff.jpg", gauss_diff);
+        cv::imwrite(output_folder + "gauss_diff.jpg", gauss_diff*7);
 
         cv::imwrite(output_folder + "canny_img.jpg", canny_img);
         

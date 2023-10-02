@@ -17,13 +17,14 @@ int main(int argc, char** argv) {
     int mosaic_aperture_size = 3;
     int aper_correction_aperture_size = 3;
     int median_aperture_size = 3;
-    float aper_correction_percentage = 8;
+    float aper_correction_percentage = 20;
 
     std::cout << "Input filter id for showing only one pic (1-4, 0 for skip): ";
     int filterId = 1;
     std::cin >> filterId;
 
     cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
+    cv::imwrite("input_cpp.jpg", image);
 
     switch (filterId)
     {

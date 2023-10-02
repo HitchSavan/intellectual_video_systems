@@ -53,6 +53,8 @@ void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size = 3)
         std::cout << std::endl;
     }
 
+    std::cout << "\nNorm koeff: " << k << "\n";
+
 
     for (int i = frameWidth; i < input_img.cols - frameWidth; i++)
     {
@@ -67,7 +69,7 @@ void gauss(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size = 3)
                     uchar blurred = input_img.at<uchar>(j + jj, i + ii);
                     Rez += Fk[ii + frameWidth][jj + frameWidth] * blurred;
                 }
-            uchar blurred = Rez / k; // осуществляем нормировку
+            uchar blurred = ((Rez / k) > 255) ? 255 : (((Rez / k) < 0) ? 0 : (Rez / k)); // осуществляем нормировку
             output_img.at<uchar>(j, i) = blurred;
         }
         if (( ( i + 1 ) % ( (input_img.cols - frameWidth) / 10 ) ) == 0)
