@@ -26,7 +26,9 @@ int progressbar(float total_items, int iter, int bar_len = 40)
 
 void show_img(std::string window_name, cv::Mat img)
 {
+    int width_coeff = img.rows/img.cols;
+    int height_coeff = img.cols/img.rows;
     cv::namedWindow(window_name, cv::WINDOW_NORMAL);
-    cv::resizeWindow(window_name, img.cols > 1000 ? img.cols/2 : img.cols, img.rows > 1000 ? img.rows/2 : img.rows);
+    cv::resizeWindow(window_name, img.cols > 1000*width_coeff ? img.cols/2 : img.cols, img.rows > 1000*height_coeff ? img.rows/2 : img.rows);
     cv::imshow(window_name, img);
 }

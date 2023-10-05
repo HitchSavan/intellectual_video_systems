@@ -24,7 +24,6 @@ int main(int argc, char** argv) {
     std::cin >> filterId;
 
     cv::Mat image = cv::imread(filename, cv::IMREAD_GRAYSCALE);
-    cv::imwrite("input_cpp.jpg", image);
 
     switch (filterId)
     {
