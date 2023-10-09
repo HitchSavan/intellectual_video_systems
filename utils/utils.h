@@ -7,7 +7,7 @@
 int progressbar(float total_items, int iter, int bar_len = 40)
 {
     int filled_len = int(float(bar_len * iter) / total_items);
-    float percents = 100.0 * float(iter) / total_items;
+    double percents = 100.0 * float(iter) / total_items;
     std::string bar = "";
     int i = 0;
     while ( i++ < filled_len)
