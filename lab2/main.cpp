@@ -34,6 +34,8 @@ int main(int argc, char** argv) {
         system(create_folder.c_str());
         output_folder += "/";
 
+        cv::imwrite(output_folder + "grayscale.jpg", image);
+        
         get_binary(image, binary_img);
         cv::imwrite(output_folder + "binary_img.jpg", binary_img);
 
