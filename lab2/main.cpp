@@ -25,73 +25,68 @@ int main(int argc, char** argv) {
     cv::Mat outline_img;
     cv::Mat gradient_img;
     
-    std::cout << "\nSave all? (0/1) ";
+    std::string create_folder = "mkdir " + output_folder;
+    system(create_folder.c_str());
+    output_folder += "/";
+
+    cv::imwrite(output_folder + "grayscale.jpg", image);
+    
+    get_binary(image, binary_img);
+    cv::imwrite(output_folder + "binary_img.jpg", binary_img);
+
+
+    erosion(binary_img, binary_erosion_img);
+    cv::imwrite(output_folder + "binary_erosion_img.jpg", binary_erosion_img);
+
+    dilation(binary_img, binary_dilation_img);
+    cv::imwrite(output_folder + "binary_dilation_img.jpg", binary_dilation_img);
+
+    opening(binary_img, binary_opening_img);
+    cv::imwrite(output_folder + "binary_opening_img.jpg", binary_opening_img);
+
+    closing(binary_img, binary_closing_img);
+    cv::imwrite(output_folder + "binary_closing_img.jpg", binary_closing_img);
+
+
+    erosion(image, grayscale_erosion_img);
+    cv::imwrite(output_folder + "grayscale_erosion_img.jpg", grayscale_erosion_img);
+
+    dilation(image, grayscale_dilation_img);
+    cv::imwrite(output_folder + "grayscale_dilation_img.jpg", grayscale_dilation_img);
+
+    opening(image, grayscale_opening_img);
+    cv::imwrite(output_folder + "grayscale_opening_img.jpg", grayscale_opening_img);
+
+    closing(image, grayscale_closing_img);
+    cv::imwrite(output_folder + "grayscale_closing_img.jpg", grayscale_closing_img);
+    
+
+    outline(image, outline_img);
+    cv::imwrite(output_folder + "outline_img.jpg", outline_img);
+
+    gradient(image, gradient_img);
+    cv::imwrite(output_folder + "gradient_img.jpg", gradient_img);
+
+
     int confirm = 0;
+    std::cout << "\nShow all? (0/1) ";
     std::cin >> confirm;
+
     if (confirm)
     {
-        std::string create_folder = "mkdir " + output_folder;
-        system(create_folder.c_str());
-        output_folder += "/";
+        show_img("binary "+filename, binary_img);
+        show_img("binary erosion "+filename, binary_erosion_img);
+        show_img("binary dilation "+filename, binary_dilation_img);
+        show_img("binary opening "+filename, binary_opening_img);
+        show_img("binary closing "+filename, binary_closing_img);
 
-        cv::imwrite(output_folder + "grayscale.jpg", image);
+        show_img("grayscale erosion "+filename, grayscale_erosion_img);
+        show_img("grayscale dilation "+filename, grayscale_dilation_img);
+        show_img("grayscale opening "+filename, grayscale_opening_img);
+        show_img("grayscale closing "+filename, grayscale_closing_img);
         
-        get_binary(image, binary_img);
-        cv::imwrite(output_folder + "binary_img.jpg", binary_img);
-
-
-        erosion(binary_img, binary_erosion_img);
-        cv::imwrite(output_folder + "binary_erosion_img.jpg", binary_erosion_img);
-
-        dilation(binary_img, binary_dilation_img);
-        cv::imwrite(output_folder + "binary_dilation_img.jpg", binary_dilation_img);
-
-        opening(binary_img, binary_opening_img);
-        cv::imwrite(output_folder + "binary_opening_img.jpg", binary_opening_img);
-
-        closing(binary_img, binary_closing_img);
-        cv::imwrite(output_folder + "binary_closing_img.jpg", binary_closing_img);
-
-
-        erosion(image, grayscale_erosion_img);
-        cv::imwrite(output_folder + "grayscale_erosion_img.jpg", grayscale_erosion_img);
-
-        dilation(image, grayscale_dilation_img);
-        cv::imwrite(output_folder + "grayscale_dilation_img.jpg", grayscale_dilation_img);
-
-        opening(image, grayscale_opening_img);
-        cv::imwrite(output_folder + "grayscale_opening_img.jpg", grayscale_opening_img);
-
-        closing(image, grayscale_closing_img);
-        cv::imwrite(output_folder + "grayscale_closing_img.jpg", grayscale_closing_img);
-        
-
-        outline(image, outline_img);
-        cv::imwrite(output_folder + "outline_img.jpg", outline_img);
-
-        gradient(image, gradient_img);
-        cv::imwrite(output_folder + "gradient_img.jpg", gradient_img);
-
-
-        std::cout << "\nShow all? (0/1) ";
-        std::cin >> confirm;
-
-        if (confirm)
-        {
-            show_img("binary "+filename, binary_img);
-            show_img("binary erosion "+filename, binary_erosion_img);
-            show_img("binary dilation "+filename, binary_dilation_img);
-            show_img("binary opening "+filename, binary_opening_img);
-            show_img("binary closing "+filename, binary_closing_img);
-
-            show_img("grayscale erosion "+filename, grayscale_erosion_img);
-            show_img("grayscale dilation "+filename, grayscale_dilation_img);
-            show_img("grayscale opening "+filename, grayscale_opening_img);
-            show_img("grayscale closing "+filename, grayscale_closing_img);
-            
-            show_img("outline "+filename, outline_img);
-            show_img("gradient "+filename, gradient_img);
-        }
+        show_img("outline "+filename, outline_img);
+        show_img("gradient "+filename, gradient_img);
     }
 
     std::cout << "\n";
