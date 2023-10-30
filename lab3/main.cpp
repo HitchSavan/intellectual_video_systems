@@ -2,6 +2,7 @@
 #include <string>
 #include <vector>
 #include <utility>
+#include <algorithm>
 #include <opencv2/opencv.hpp>
 #include <utils/utils.h>
 #include <panorama.h>
@@ -11,9 +12,9 @@ void panorama(cv::Mat &left, cv::Mat &right, cv::Mat &output, int iter = 0) {
     std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultL = detect_keypoints(left, keypoint_imageL);
     std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultR = detect_keypoints(right, keypoint_imageR);
 
-    cv::Mat match;
+    cv::Mat matchimg;
     match({left, right},
-            output, match,
+            output, matchimg,
             detection_resultL, detection_resultR);
 }
 
@@ -29,16 +30,22 @@ void rec_panorama(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output, int
 }
 
 void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output) {
+    for (auto &img : input)
+        cv::copyMakeBorder(img, img, 0 + img.rows, 0 + img.rows, img.cols + img.cols, 0, cv::BORDER_CONSTANT, cv::Scalar(0));
+
     if (output.empty()) {
         for (size_t i = 0; i < input.size()-1; ++i) {
             cv::Mat out;
             output.push_back( out );
         }
     }
-    output.push_back(input[0]);
-    std::rotate(output.begin(), output.rbegin() + 1, output.rend());
+    output.insert(output.begin(), input[0]);
 
     rec_panorama(input, output);
+
+    output.erase(output.begin());
+    for (auto &img : output)
+        img = img(cv::Rect(0, 0, img.cols/2, img.rows));
 }
 
 int main(int argc, char** argv) {
@@ -54,10 +61,6 @@ int main(int argc, char** argv) {
     cv::Mat image2 = cv::imread(filename2);
     cv::Mat image3 = cv::imread(filename3);
     std::vector<cv::Mat> src_images = {image1, image2, image3};
-
-    for (auto &img : src_images) {
-        cv::copyMakeBorder(img, img, 0, 0, img.cols, 0, cv::BORDER_CONSTANT, cv::Scalar(0));
-    }
 
     cv::Mat keypoint_image1;
     cv::Mat keypoint_image2;
@@ -85,8 +88,11 @@ int main(int argc, char** argv) {
 
     std::vector<cv::Mat> rec_output;
     recursive_panorama_sewing(src_images, rec_output);
+
     imwrite_vector(output_folder + "recursive", "jpg", rec_output);
 
+    for (auto &img : output_images)
+        img = img(cv::Rect(0, 0, img.cols/2, img.rows));
     imwrite_vector(output_folder + "keypoints", "jpg", keypoint_images);
     imwrite_vector(output_folder + "matches", "jpg", matches_images);
     imwrite_vector(output_folder + "result", "jpg", output_images);
