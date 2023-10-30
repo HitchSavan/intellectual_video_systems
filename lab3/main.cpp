@@ -6,8 +6,39 @@
 #include <utils/utils.h>
 #include <panorama.h>
 
-void recursive_panoram(cv::Mat &left, cv::Mat &right, int iter) {
-    
+void panorama(cv::Mat &left, cv::Mat &right, cv::Mat &output, int iter = 0) {
+    cv::Mat keypoint_imageL, keypoint_imageR;
+    std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultL = detect_keypoints(left, keypoint_imageL);
+    std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultR = detect_keypoints(right, keypoint_imageR);
+
+    cv::Mat match;
+    match({left, right},
+            output, match,
+            detection_resultL, detection_resultR);
+}
+
+void rec_panorama(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output, int iter = 0) {
+    if (input.size() != output.size()) {
+        std::cout << "IO vectors mismatch";
+        return;
+    }
+    if (iter != output.size()-1) {
+        panorama(output[iter], input[iter+1], output[iter+1]);
+        rec_panorama(input, output, iter+1);
+    }
+}
+
+void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output) {
+    if (output.empty()) {
+        for (size_t i = 0; i < input.size()-1; ++i) {
+            cv::Mat out;
+            output.push_back( out );
+        }
+    }
+    output.push_back(input[0]);
+    std::rotate(output.begin(), output.rbegin() + 1, output.rend());
+
+    rec_panorama(input, output);
 }
 
 int main(int argc, char** argv) {
@@ -38,13 +69,11 @@ int main(int argc, char** argv) {
     system(create_folder.c_str());
     output_folder += "/";
     
-    for (size_t i = 0; i < src_images.size(); ++i)
-    {
+    for (size_t i = 0; i < src_images.size(); ++i) {
         detection_result.push_back( detect_keypoints(src_images[i], keypoint_images[i]) );
     }
 
-    for (size_t i = 0; i < src_images.size()-1; ++i)
-    {
+    for (size_t i = 0; i < src_images.size()-1; ++i) {
         cv::Mat out, matc;
         output_images.push_back(out);
         matches_images.push_back(matc);
@@ -54,8 +83,11 @@ int main(int argc, char** argv) {
             detection_result[i], detection_result[i+1]);
     }
 
-    imwrite_vector(output_folder + "keypoints", "jpg", keypoint_images);
+    std::vector<cv::Mat> rec_output;
+    recursive_panorama_sewing(src_images, rec_output);
+    imwrite_vector(output_folder + "recursive", "jpg", rec_output);
 
+    imwrite_vector(output_folder + "keypoints", "jpg", keypoint_images);
     imwrite_vector(output_folder + "matches", "jpg", matches_images);
     imwrite_vector(output_folder + "result", "jpg", output_images);
 
@@ -63,12 +95,12 @@ int main(int argc, char** argv) {
     std::cout << "\nShow all? (0/1) ";
     std::cin >> confirm;
 
-    if (confirm)
-    {
+    if (confirm) {
         show_imgs("keypoints", keypoint_images);
         show_imgs("matches", matches_images);
         show_imgs("result", output_images, 0.5);
         show_imgs("input", src_images, 0.5);
+        show_imgs("recursive", rec_output, 0.5);
         cv::waitKey(0);
     }
     std::cout << "\n";
