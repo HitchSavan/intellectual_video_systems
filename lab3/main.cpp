@@ -44,6 +44,7 @@ void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat>
     rec_panorama(input, output);
 
     output.erase(output.begin());
+    
     for (auto &img : output)
         img = img(cv::Rect(0, 0, img.cols/2, img.rows));
 }
@@ -73,6 +74,7 @@ int main(int argc, char** argv) {
     output_folder += "/";
     
     for (size_t i = 0; i < src_images.size(); ++i) {
+        cv::cvtColor(src_images[i], src_images[i], cv::COLOR_BGR2BGRA);
         detection_result.push_back( detect_keypoints(src_images[i], keypoint_images[i]) );
     }
 
@@ -88,8 +90,7 @@ int main(int argc, char** argv) {
 
     std::vector<cv::Mat> rec_output;
     recursive_panorama_sewing(src_images, rec_output);
-
-    imwrite_vector(output_folder + "recursive", "jpg", rec_output);
+    imwrite_vector(output_folder + "recursive", "png", rec_output);
 
     for (auto &img : output_images)
         img = img(cv::Rect(0, 0, img.cols/2, img.rows));

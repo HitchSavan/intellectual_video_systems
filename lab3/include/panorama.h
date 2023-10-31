@@ -1,5 +1,6 @@
 #include <vector>
 #include <utility>
+#include <utils/utils.h>
 #include <opencv2/opencv.hpp>
 
 std::pair< std::vector<cv::KeyPoint>, cv::Mat > detect_keypoints(const cv::Mat &input_img, cv::Mat &output_img)
@@ -19,19 +20,22 @@ std::pair< std::vector<cv::KeyPoint>, cv::Mat > detect_keypoints(const cv::Mat &
 
 void sewing(const cv::Mat &input_img, cv::Mat &output_img)
 {
-    for ( int i = 0; i < input_img.rows; i++ )
+    for ( int i = 0; i < input_img.cols; i++ )
     {
-        for ( int j = 0; j < input_img.cols; j++ )
+        for ( int j = 0; j < input_img.rows; j++ )
         {
-            if (output_img.at<cv::Vec3b>(i,j)[0] == 0 && output_img.at<cv::Vec3b>(i,j)[1] == 0 && output_img.at<cv::Vec3b>(i,j)[2] == 0)
+            if ((output_img.at<cv::Vec4b>(j, i)[0] == 0 && output_img.at<cv::Vec4b>(j, i)[1] == 0 && output_img.at<cv::Vec4b>(j, i)[2] == 0)
+                || output_img.at<cv::Vec4b>(j, i)[3] != 255)
             {
-                output_img.at<cv::Vec3b>(i, j) = input_img.at<cv::Vec3b>(i, j);
+                output_img.at<cv::Vec4b>(j, i) = input_img.at<cv::Vec4b>(j, i);
             }
         }
     }
 }
 
-cv::Mat match(const std::vector<cv::Mat> &input_imgs, cv::Mat &output_img, cv::Mat &matches_img, std::pair<std::vector<cv::KeyPoint>, cv::Mat> &detection_result1, std::pair<std::vector<cv::KeyPoint>, cv::Mat> &detection_result2)
+cv::Mat match(const std::vector<cv::Mat> &input_imgs, cv::Mat &output_img, cv::Mat &matches_img,
+    std::pair<std::vector<cv::KeyPoint>, cv::Mat> &detection_result1,
+    std::pair<std::vector<cv::KeyPoint>, cv::Mat> &detection_result2)
 {
     std::vector<std::vector<cv::KeyPoint>> keypoints = {detection_result1.first, detection_result2.first};
     std::vector<cv::Mat> descriptors = {detection_result1.second, detection_result2.second};
