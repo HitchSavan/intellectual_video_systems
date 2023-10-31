@@ -7,48 +7,6 @@
 #include <utils/utils.h>
 #include <panorama.h>
 
-void panorama(cv::Mat &left, cv::Mat &right, cv::Mat &output, int iter = 0) {
-    cv::Mat keypoint_imageL, keypoint_imageR;
-    std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultL = detect_keypoints(left, keypoint_imageL);
-    std::pair <std::vector<cv::KeyPoint>, cv::Mat> detection_resultR = detect_keypoints(right, keypoint_imageR);
-
-    cv::Mat matchimg;
-    match({left, right},
-            output, matchimg,
-            detection_resultL, detection_resultR);
-}
-
-void rec_panorama(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output, int iter = 0) {
-    if (input.size() != output.size()) {
-        std::cout << "IO vectors mismatch";
-        return;
-    }
-    if (iter != output.size()-1) {
-        panorama(output[iter], input[iter+1], output[iter+1]);
-        rec_panorama(input, output, iter+1);
-    }
-}
-
-void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output) {
-    for (auto &img : input)
-        cv::copyMakeBorder(img, img, 0 + img.rows, 0 + img.rows, img.cols + img.cols, 0, cv::BORDER_CONSTANT, cv::Scalar(0));
-
-    if (output.empty()) {
-        for (size_t i = 0; i < input.size()-1; ++i) {
-            cv::Mat out;
-            output.push_back( out );
-        }
-    }
-    output.insert(output.begin(), input[0]);
-
-    rec_panorama(input, output);
-
-    output.erase(output.begin());
-    
-    for (auto &img : output)
-        img = img(cv::Rect(0, 0, img.cols/2, img.rows));
-}
-
 int main(int argc, char** argv) {
 
     std::string filename1 = "p1.jpg";
