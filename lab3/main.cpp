@@ -11,20 +11,20 @@ int main(int argc, char* argv[]) {
 
     if (argc == 2)
     {
-        std::cout << "parsed too few arguments, at least 2 pictures ";
+        std::cout << "parsed too few arguments, at least 2 pictures is needed ";
         return 1;
     }
 
-    std::vector<cv::Mat> output_images;
-    std::vector<cv::Mat> matches_images;
     std::vector<cv::Mat> src_images;
+    std::vector<std::pair<std::vector<cv::KeyPoint>, cv::Mat>> detection_result;
     std::vector<cv::Mat> keypoint_images;
-    std::vector<std::pair <std::vector<cv::KeyPoint>, cv::Mat>> detection_result;
+    std::vector<cv::Mat> matches_images;
+    std::vector<cv::Mat> output_images;
 
     for (int i = 1; i < argc; i++)
     {
         std::string filename = argv[i];
-        src_images.push_back(cv::imread(argv[i]));
+        src_images.push_back(cv::imread(filename));
 
         cv::Mat keypoint_img;
         keypoint_images.push_back(keypoint_img);
@@ -56,7 +56,7 @@ int main(int argc, char* argv[]) {
     imwrite_vector(output_folder + "recursive", "png", rec_output);
 
     for (auto &img : output_images)
-        img = img(cv::Rect(0, 0, img.cols/2, img.rows));
+        crop_border(img);
     imwrite_vector(output_folder + "keypoints", "jpg", keypoint_images);
     imwrite_vector(output_folder + "matches", "jpg", matches_images);
     imwrite_vector(output_folder + "result", "jpg", output_images);
@@ -66,11 +66,11 @@ int main(int argc, char* argv[]) {
     std::cin >> confirm;
 
     if (confirm) {
+        show_imgs("input", src_images);
         show_imgs("keypoints", keypoint_images);
         show_imgs("matches", matches_images);
-        show_imgs("result", output_images, 0.5);
-        show_imgs("input", src_images, 0.5);
-        show_imgs("recursive", rec_output, 0.5);
+        show_imgs("result", output_images);
+        show_imgs("recursive", rec_output);
         cv::waitKey(0);
     }
     std::cout << "\n";
