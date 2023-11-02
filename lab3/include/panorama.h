@@ -3,6 +3,17 @@
 #include <utils/utils.h>
 #include <opencv2/opencv.hpp>
 
+void crop_border(cv::Mat &input_img)
+{
+    cv::Mat mask;
+    cv::cvtColor(input_img, mask, cv::COLOR_BGRA2GRAY);
+    cv::threshold(mask, mask, 0, 255, cv::THRESH_BINARY);
+
+    cv::Mat bounds;
+    cv::findNonZero(mask, bounds);
+    input_img = input_img(cv::boundingRect(bounds));
+}
+
 std::pair< std::vector<cv::KeyPoint>, cv::Mat > detect_keypoints(const cv::Mat &input_img, cv::Mat &output_img)
 {
     cv::Ptr<cv::ORB> detector = cv::ORB::create();
@@ -106,7 +117,7 @@ void rec_panorama(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output, int
 
 void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat> &output) {
     for (auto &img : input)
-        cv::copyMakeBorder(img, img, 0 + img.rows, 0 + img.rows, img.cols + img.cols, 0, cv::BORDER_CONSTANT, cv::Scalar(0));
+        cv::copyMakeBorder(img, img, img.rows, img.rows, img.cols*2, img.rows*3, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     if (output.empty()) {
         for (size_t i = 0; i < input.size()-1; ++i) {
@@ -121,5 +132,7 @@ void recursive_panorama_sewing(std::vector<cv::Mat> &input, std::vector<cv::Mat>
     output.erase(output.begin());
     
     for (auto &img : output)
-        img = img(cv::Rect(0, 0, img.cols/2, img.rows));
+        crop_border(img);
+    for (auto &img : input)
+        crop_border(img);
 }

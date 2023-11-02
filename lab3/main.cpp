@@ -7,25 +7,30 @@
 #include <utils/utils.h>
 #include <panorama.h>
 
-int main(int argc, char** argv) {
+int main(int argc, char* argv[]) {
 
-    std::string filename1 = "p1.jpg";
-    std::string filename2 = "p2.jpg";
-    std::string filename3 = "p3.jpg";
-    std::string output_folder = "output";
+    if (argc == 2)
+    {
+        std::cout << "parsed too few arguments, at least 2 pictures ";
+        return 1;
+    }
+
     std::vector<cv::Mat> output_images;
     std::vector<cv::Mat> matches_images;
-
-    cv::Mat image1 = cv::imread(filename1);
-    cv::Mat image2 = cv::imread(filename2);
-    cv::Mat image3 = cv::imread(filename3);
-    std::vector<cv::Mat> src_images = {image1, image2, image3};
-
-    cv::Mat keypoint_image1;
-    cv::Mat keypoint_image2;
-    cv::Mat keypoint_image3;
-    std::vector<cv::Mat> keypoint_images = {keypoint_image1, keypoint_image2, keypoint_image3};
+    std::vector<cv::Mat> src_images;
+    std::vector<cv::Mat> keypoint_images;
     std::vector<std::pair <std::vector<cv::KeyPoint>, cv::Mat>> detection_result;
+
+    for (int i = 1; i < argc; i++)
+    {
+        std::string filename = argv[i];
+        src_images.push_back(cv::imread(argv[i]));
+
+        cv::Mat keypoint_img;
+        keypoint_images.push_back(keypoint_img);
+    }
+
+    std::string output_folder = "output";
     
     std::string create_folder = "mkdir " + output_folder;
     system(create_folder.c_str());
