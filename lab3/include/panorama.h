@@ -82,13 +82,13 @@ cv::Mat match(const std::vector<cv::Mat> &input_imgs, cv::Mat &output_img, cv::M
 
     cv::drawMatches(input_imgs[0], matched1, input_imgs[1], matched2, good_matches, matches_img);
     
-    cv::Mat homography = cv::findHomography(points1, points2, cv::RANSAC);
+    cv::Mat homography = cv::findHomography(points2, points1, cv::RANSAC);
     cv::Mat stitch_img;
 
-    cv::warpPerspective(input_imgs[0], stitch_img, homography, cv::Size(input_imgs[0].cols*2, input_imgs[0].rows));
-    output_img = stitch_img(cv::Rect(0, 0, input_imgs[1].cols*2, input_imgs[1].rows));
+    cv::warpPerspective(input_imgs[1], stitch_img, homography, cv::Size(input_imgs[1].cols*2, input_imgs[1].rows));
+    output_img = stitch_img(cv::Rect(0, 0, input_imgs[0].cols*2, input_imgs[0].rows));
 
-    sewing(input_imgs[1], output_img);
+    sewing(input_imgs[0], output_img);
 
     return output_img;
 }
