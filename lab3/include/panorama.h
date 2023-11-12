@@ -86,7 +86,7 @@ cv::Mat match(const std::vector<cv::Mat> &input_imgs, cv::Mat &output_img, cv::M
     cv::Mat stitch_img;
 
     cv::warpPerspective(input_imgs[1], stitch_img, homography, cv::Size(input_imgs[1].cols*2, input_imgs[1].rows));
-    output_img = stitch_img(cv::Rect(0, 0, input_imgs[0].cols*2, input_imgs[0].rows));
+    output_img = stitch_img(cv::Rect(0, 0, input_imgs[0].cols, input_imgs[0].rows));
 
     sewing(input_imgs[0], output_img);
 

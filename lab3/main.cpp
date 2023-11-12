@@ -9,10 +9,11 @@
 
 int main(int argc, char* argv[]) {
 
-    if (argc == 2)
+    if (argc <= 2)
     {
         std::cout << "parsed too few arguments, at least 2 pictures is needed ";
         return 1;
+
     }
 
     std::vector<cv::Mat> src_images;
