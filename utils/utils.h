@@ -22,7 +22,7 @@ int progressbar(float total_items, int iter, int bar_len = 40)
         bar += "-";
     }
     std::cout << std::fixed << std::setprecision(3);
-    std::cout << '[' << bar << "]\t" << percents << '\r';
+    std::cout << '[' << bar << "]\t" << percents << "%\r";
     return (iter+1);
 }
 
