@@ -1,7 +1,7 @@
 #include <vector>
 #include <opencv2/opencv.hpp>
 #include <utils/utils.h>
-#include <base_outline.h>
+#include <lab1_5/include/base_outline.h>
 
 void sobel_horizontal(const cv::Mat &input_img, cv::Mat &output_img)
 {

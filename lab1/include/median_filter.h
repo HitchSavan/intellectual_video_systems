@@ -3,7 +3,7 @@
 #include <opencv2/opencv.hpp>
 #include <utils/utils.h>
 
-void median_f(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size) {
+void median_f(const cv::Mat &input_img, cv::Mat &output_img, int aperture_size = 3) {
     std::cout << "\nMedian filter\n";
 
     output_img = cv::Mat::zeros(input_img.size(), CV_8U);
