@@ -11,6 +11,8 @@
 
 int main(int argc, char* argv[]) {
 
+    // TODO: implement config loading
+
     cv::Mat src_left;
     cv::Mat src_right;
 
@@ -34,8 +36,9 @@ int main(int argc, char* argv[]) {
     cv::Mat out_open;
     cv::Mat out_filtered;
     cv::Mat out_cropped;
-    cv::Mat out_strob;
-
+    cv::Mat out_histogram;
+    cv::Mat out_histogram_crop;
+    cv::Mat out_masked;
     
     cv::absdiff(src_right, src_left, out_MAD);
 
@@ -52,8 +55,12 @@ int main(int argc, char* argv[]) {
 
     crop_border(out_filtered, out_cropped);
 
-    strob(out_cropped, out_strob);
-    
+    int strob_threshould = 50;
+
+    strob(out_cropped, out_histogram_crop, strob_threshould);
+    std::vector<std::vector<int>> weights = strob(out_filtered, out_histogram, strob_threshould);
+    mask_strob(src_right, out_masked, weights);
+
 
     std::string output_folder = "output";
     std::string create_folder = "mkdir " + output_folder;
@@ -68,7 +75,9 @@ int main(int argc, char* argv[]) {
     cv::imwrite(output_folder + "opening.jpg", out_open);
     cv::imwrite(output_folder + "filtered.jpg", out_filtered);
     cv::imwrite(output_folder + "cropped.jpg", out_cropped);
-    cv::imwrite(output_folder + "strobed.jpg", out_strob);
+    cv::imwrite(output_folder + "histogram.jpg", out_histogram);
+    cv::imwrite(output_folder + "histogram_crop.jpg", out_histogram_crop);
+    cv::imwrite(output_folder + "masked.jpg", out_masked);
     
     int confirm = 0;
     std::cout << "\nShow all? (0/1) ";
@@ -83,7 +92,9 @@ int main(int argc, char* argv[]) {
         show_img("opening", out_open);
         show_img("filtered", out_filtered);
         show_img("cropped", out_cropped);
-        show_img("strobed", out_strob);
+        show_img("histogram", out_histogram);
+        show_img("histogram_crop", out_histogram_crop);
+        show_img("masked", out_masked);
         cv::waitKey(0);
     }
     std::cout << "\n";
