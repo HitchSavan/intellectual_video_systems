@@ -30,11 +30,12 @@ int main(int argc, char* argv[]) {
     
     cv::Mat out_concat;
     cv::Mat out_concat_binary;
-    cv::Mat out_strob;
+
     cv::Mat out_open;
     cv::Mat out_filtered;
+    cv::Mat out_cropped;
+    cv::Mat out_strob;
 
-    
     
     cv::absdiff(src_right, src_left, out_MAD);
 
@@ -49,7 +50,9 @@ int main(int argc, char* argv[]) {
     opening(out_concat, out_open, 3, CROSS);
     closing(out_open, out_filtered, 105);
 
-    strob(out_filtered, out_strob);
+    crop_border(out_filtered, out_cropped);
+
+    strob(out_cropped, out_strob);
     
 
     std::string output_folder = "output";
@@ -64,7 +67,8 @@ int main(int argc, char* argv[]) {
     cv::imwrite(output_folder + "concatinated.jpg", out_concat);
     cv::imwrite(output_folder + "opening.jpg", out_open);
     cv::imwrite(output_folder + "filtered.jpg", out_filtered);
-    cv::imwrite(output_folder + "wint strob.jpg", out_strob);
+    cv::imwrite(output_folder + "cropped.jpg", out_cropped);
+    cv::imwrite(output_folder + "strobed.jpg", out_strob);
     
     int confirm = 0;
     std::cout << "\nShow all? (0/1) ";
@@ -78,7 +82,8 @@ int main(int argc, char* argv[]) {
         show_img("concatinated", out_concat);
         show_img("opening", out_open);
         show_img("filtered", out_filtered);
-        show_img("wint strob", out_strob);
+        show_img("cropped", out_cropped);
+        show_img("strobed", out_strob);
         cv::waitKey(0);
     }
     std::cout << "\n";
