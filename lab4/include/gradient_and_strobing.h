@@ -2,6 +2,7 @@
 #include <opencv2/core.hpp>
 #include <vector>
 #include <random>
+#include <cstdlib>
 #include <lab1_5/include/sobel_outline.h>
 #include <lab2/include/morphological_operations.h>
 
@@ -24,9 +25,9 @@ void mask_strob_object(const cv::Mat &input_img, cv::Mat &output_img, std::vecto
     std::pair<int, int> p1 = {0, 0};
     std::pair<int, int> p2 = {0, 0};
 
-    for (int i = 0; i < input_img.cols; ++i)
+    for (int i = 1; i < input_img.cols; ++i)
     {
-        for (int j = 0; j < input_img.rows; ++j)
+        for (int j = 1; j < input_img.rows; ++j)
         {
             if (hist[0][j] && hist[1][i])
             {
@@ -49,10 +50,19 @@ void mask_strob_object(const cv::Mat &input_img, cv::Mat &output_img, std::vecto
                 }
                 p2 = {i, j};
             }
+
+            if ((hist[0][j-1] && !hist[0][j]) && (hist[1][i-1] && !hist[1][i]))
+            {
+                cv::rectangle(output_img, cv::Point(p1.first, p1.second), cv::Point(p2.first, p2.second), cv::Scalar(color[0], color[1], color[2]), 2);
+                
+                for (int i = 0; i < 3; ++i)
+                {
+                    color[i] = 55 + std::rand()%200;
+                }
+                top_left = false;
+            }
         }
     }
-    
-    cv::rectangle(output_img, cv::Point(p1.first, p1.second), cv::Point(p2.first, p2.second), cv::Scalar(color[0], color[1], color[2]), 2);
 }
 
 void get_gradient(const cv::Mat &input_img, cv::Mat &output_img)

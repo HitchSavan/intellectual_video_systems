@@ -66,15 +66,15 @@ int main(int argc, char* argv[]) {
     system(create_folder.c_str());
     output_folder += "/";
 
-    cv::imwrite(output_folder + "MAD.jpg", out_MAD);
-    cv::imwrite(output_folder + "MAD_binary.jpg", out_MAD_binary);
-    cv::imwrite(output_folder + " gradientR.jpg", out_gradientR);
-    cv::imwrite(output_folder + " gradientR_binary.jpg", out_gradientR_binary);
-    cv::imwrite(output_folder + "concatinated.jpg", out_concat);
-    cv::imwrite(output_folder + "filtered.jpg", out_filtered);
-    cv::imwrite(output_folder + "cropped.jpg", out_cropped);
-    cv::imwrite(output_folder + "histogram.jpg", out_histogram);
-    cv::imwrite(output_folder + "histogram_crop.jpg", out_histogram_crop);
+    cv::imwrite(output_folder + "MAD.jpg", 255-out_MAD);
+    cv::imwrite(output_folder + "MAD_binary.jpg", 255-out_MAD_binary);
+    cv::imwrite(output_folder + " gradientR.jpg", 255-out_gradientR);
+    cv::imwrite(output_folder + " gradientR_binary.jpg", 255-out_gradientR_binary);
+    cv::imwrite(output_folder + "concatinated.jpg", 255-out_concat);
+    cv::imwrite(output_folder + "filtered.jpg", 255-out_filtered);
+    cv::imwrite(output_folder + "cropped.jpg", 255-out_cropped);
+    cv::imwrite(output_folder + "histogram.jpg", 255-out_histogram);
+    cv::imwrite(output_folder + "histogram_crop.jpg", 255-out_histogram_crop);
     cv::imwrite(output_folder + "masked.jpg", out_masked);
     
     int confirm = 0;
