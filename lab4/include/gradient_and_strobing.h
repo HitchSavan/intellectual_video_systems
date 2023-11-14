@@ -1,7 +1,9 @@
 #include <opencv2/opencv.hpp>
 #include <opencv2/core.hpp>
 #include <vector>
+#include <random>
 #include <lab1_5/include/sobel_outline.h>
+#include <lab2/include/morphological_operations.h>
 
 void crop_border(const cv::Mat &input_img, cv::Mat &output_img)
 {
@@ -10,8 +12,17 @@ void crop_border(const cv::Mat &input_img, cv::Mat &output_img)
     output_img = input_img(cv::boundingRect(bounds));
 }
 
-void mask_strob(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std::vector<int>> &hist) {
+void mask_strob_object(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std::vector<int>> &hist) {
     output_img = input_img.clone();
+    std::vector<int> color;
+    for (int i = 0; i < 3; ++i)
+    {
+        color.push_back(55 + std::rand()%200);
+    }
+
+    bool top_left = false;
+    std::pair<int, int> p1 = {0, 0};
+    std::pair<int, int> p2 = {0, 0};
 
     for (int i = 0; i < input_img.cols; ++i)
     {
@@ -19,11 +30,29 @@ void mask_strob(const cv::Mat &input_img, cv::Mat &output_img, std::vector<std::
         {
             if (hist[0][j] && hist[1][i])
             {
-                uchar pixel_val = output_img.at<uchar>(j, i);
-                output_img.at<uchar>(j, i) = pixel_val + 100 < 255 ? pixel_val + 100 : 255;
+                if (!top_left)
+                {
+                    p1 = {i, j};
+                    top_left = true;
+                }
+
+                if (input_img.type() == CV_8UC3)
+                {
+                    cv::Vec3b pixel_val = input_img.at<cv::Vec3b>(j, i);
+                    for (int k = 0; k < pixel_val.channels; ++k)
+                        output_img.at<cv::Vec3b>(j, i)[k] = pixel_val[k] + color[k] < 255 ? pixel_val[k] + color[k] : 255;
+                }
+                else
+                {
+                    uchar pixel_val = input_img.at<uchar>(j, i);
+                    output_img.at<uchar>(j, i) = pixel_val + color[0] < 255 ? pixel_val + color[0] : 255;
+                }
+                p2 = {i, j};
             }
         }
     }
+    
+    cv::rectangle(output_img, cv::Point(p1.first, p1.second), cv::Point(p2.first, p2.second), cv::Scalar(color[0], color[1], color[2]), 2);
 }
 
 void get_gradient(const cv::Mat &input_img, cv::Mat &output_img)
@@ -58,7 +87,6 @@ std::vector<std::vector<int>> strob(const cv::Mat &input_img, cv::Mat &strob_img
     std::vector<int> projectionH(input_img.rows, 0);
     std::vector<int> projectionV(input_img.cols, 0);
     
-    // strob_img = input_img.clone();
     cv::copyMakeBorder(input_img, strob_img, input_img.rows*1.1, input_img.rows*1.1, input_img.cols*1.1, input_img.cols*1.1, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     int hist_row = strob_img.rows - 1;
@@ -113,4 +141,17 @@ std::vector<std::vector<int>> strob(const cv::Mat &input_img, cv::Mat &strob_img
     }
     std::cout << std::endl;
     return {projectionH, projectionV};
+}
+
+void filter(const cv::Mat &input_img, cv::Mat &out_image, int closing_mask_size = 105)
+{
+    cv::Mat input_border_img;
+    cv::Mat out_open;
+
+    cv::copyMakeBorder(input_img, input_border_img, closing_mask_size, closing_mask_size, closing_mask_size,closing_mask_size, cv::BORDER_CONSTANT, cv::Scalar(0));
+
+    opening(input_border_img, out_open, 3, CROSS);
+    closing(out_open, out_image, closing_mask_size);
+
+    out_image = out_image(cv::Range(closing_mask_size, out_image.rows - closing_mask_size), cv::Range(closing_mask_size, out_image.cols - closing_mask_size));
 }
