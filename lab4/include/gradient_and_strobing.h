@@ -25,11 +25,17 @@ void mask_strob_object(const cv::Mat &input_img, cv::Mat &output_img, std::vecto
     std::pair<int, int> p1 = {0, 0};
     std::pair<int, int> p2 = {0, 0};
 
+    double angle_cos = (double)input_img.cols / hist[2].size();
+    int diagonal_pos = 0;
+
     for (int i = 1; i < input_img.cols; ++i)
     {
         for (int j = 1; j < input_img.rows; ++j)
         {
-            if (hist[0][j] && hist[1][i])
+            diagonal_pos = i / angle_cos;
+            diagonal_pos = diagonal_pos >= hist[2].size() ? hist[2].size()-1 : diagonal_pos;
+            
+            if (hist[0][j] && hist[1][i] && hist[2][diagonal_pos])
             {
                 if (!top_left)
                 {
@@ -51,7 +57,9 @@ void mask_strob_object(const cv::Mat &input_img, cv::Mat &output_img, std::vecto
                 p2 = {i, j};
             }
 
-            if ((hist[0][j-1] && !hist[0][j]) && (hist[1][i-1] && !hist[1][i]))
+            if (((hist[0][j-1] && !hist[0][j]) && (hist[1][i-1] && !hist[1][i])) ||
+                    ((hist[2][diagonal_pos-1] && !hist[2][diagonal_pos]) && (hist[0][j-1] && !hist[0][j])) ||
+                    ((hist[2][diagonal_pos-1] && !hist[2][diagonal_pos]) && (hist[1][i-1] && !hist[1][i])))
             {
                 cv::rectangle(output_img, cv::Point(p1.first, p1.second), cv::Point(p2.first, p2.second), cv::Scalar(color[0], color[1], color[2]), 2);
                 
@@ -96,11 +104,15 @@ std::vector<std::vector<int>> strob(const cv::Mat &input_img, cv::Mat &strob_img
 
     std::vector<int> projectionH(input_img.rows, 0);
     std::vector<int> projectionV(input_img.cols, 0);
-    
+    std::vector<int> projectionD(std::sqrt(input_img.cols*input_img.cols + input_img.rows*input_img.rows), 0);
+
     cv::copyMakeBorder(input_img, strob_img, input_img.rows*1.1, input_img.rows*1.1, input_img.cols*1.1, input_img.cols*1.1, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     int hist_row = strob_img.rows - 1;
     int hist_col = strob_img.cols - 1;
+    
+    double angle_cos = (double)input_img.cols / projectionD.size();
+    int diagonal_pos = 0;
 
     for (int i = 0; i < input_img.cols; ++i)
     {
@@ -124,6 +136,10 @@ std::vector<std::vector<int>> strob(const cv::Mat &input_img, cv::Mat &strob_img
                 
                 ++projectionH[j];
                 ++projectionV[i];
+
+                diagonal_pos = i / angle_cos;
+                diagonal_pos = diagonal_pos >= projectionD.size() ? projectionD.size()-1 : diagonal_pos;
+                ++projectionD[diagonal_pos];
             }
         }
         if (( ( i + 1 ) % ( (input_img.cols) / 10 ) ) == 0)
@@ -149,8 +165,21 @@ std::vector<std::vector<int>> strob(const cv::Mat &input_img, cv::Mat &strob_img
         if (projectionV[i] < threshold)
             projectionV[i] = 0;
     }
+    for (int i = 1; i < projectionD.size() - 1; ++i)
+    {
+        if (projectionD[i-1] < threshold)
+            projectionD[i-1] = 0;
+
+        if (projectionD[i+1] < threshold)
+            projectionD[i+1] = 0;
+
+        if (projectionD[i] == 0 && projectionD[i-1] != 0 && projectionD[i+1] != 0)
+        {
+            projectionD[i] = (projectionD[i-1] + projectionD[i+1]) / 2;
+        }
+    }
     std::cout << std::endl;
-    return {projectionH, projectionV};
+    return {projectionH, projectionV, projectionD};
 }
 
 void filter(const cv::Mat &input_img, cv::Mat &out_image, int closing_mask_size = 105)
