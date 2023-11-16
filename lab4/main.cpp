@@ -7,8 +7,6 @@
 
 int main(int argc, char* argv[]) {
 
-    // TODO: implement config loading
-
     cv::Mat src_left;
     cv::Mat src_right;
     cv::Mat src_left_colour;
@@ -17,7 +15,7 @@ int main(int argc, char* argv[]) {
     if ( argc <=2 ) {
         src_left_colour = cv::imread("p3_1.jpg");
         src_right_colour = cv::imread("p3_2.jpg");
-    } else {
+    } else if ( argc == 3 ) {
         src_left_colour = cv::imread(argv[1]);
         src_right_colour = cv::imread(argv[2]);
     }
@@ -66,15 +64,15 @@ int main(int argc, char* argv[]) {
     system(create_folder.c_str());
     output_folder += "/";
 
-    cv::imwrite(output_folder + "MAD.jpg", 255-out_MAD);
-    cv::imwrite(output_folder + "MAD_binary.jpg", 255-out_MAD_binary);
-    cv::imwrite(output_folder + " gradientR.jpg", 255-out_gradientR);
-    cv::imwrite(output_folder + " gradientR_binary.jpg", 255-out_gradientR_binary);
-    cv::imwrite(output_folder + "concatinated.jpg", 255-out_concat);
-    cv::imwrite(output_folder + "filtered.jpg", 255-out_filtered);
-    cv::imwrite(output_folder + "cropped.jpg", 255-out_cropped);
-    cv::imwrite(output_folder + "histogram.jpg", 255-out_histogram);
-    cv::imwrite(output_folder + "histogram_crop.jpg", 255-out_histogram_crop);
+    cv::imwrite(output_folder + "MAD.jpg", 255 - out_MAD);
+    cv::imwrite(output_folder + "MAD_binary.jpg", 255 - out_MAD_binary);
+    cv::imwrite(output_folder + "gradientR.jpg", 255 - out_gradientR);
+    cv::imwrite(output_folder + "gradientR_binary.jpg", 255 - out_gradientR_binary);
+    cv::imwrite(output_folder + "concatinated.jpg", 255 - out_concat);
+    cv::imwrite(output_folder + "filtered.jpg", 255 - out_filtered);
+    cv::imwrite(output_folder + "cropped.jpg", 255 - out_cropped);
+    cv::imwrite(output_folder + "histogram.jpg", 255 - out_histogram);
+    cv::imwrite(output_folder + "histogram_crop.jpg", 255 - out_histogram_crop);
     cv::imwrite(output_folder + "masked.jpg", out_masked);
     
     int confirm = 0;
@@ -85,7 +83,7 @@ int main(int argc, char* argv[]) {
         show_img("inputL", src_left);
         show_img("inputR", src_right);
         show_img("MAD", out_MAD);
-        show_img(" gradientR", out_gradientR);
+        show_img("gradientR", out_gradientR);
         show_img("concatinated", out_concat);
         show_img("filtered", out_filtered);
         show_img("cropped", out_cropped);
