@@ -1,9 +1,6 @@
 cmake_minimum_required(VERSION 3.5.0)
 project(lab6)
 
-include(CTest)
-enable_testing()
-
 include_directories( include ../ )
 
 find_package( OpenCV REQUIRED )
@@ -28,6 +25,8 @@ add_custom_command(TARGET lab6
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:lab6> ${CMAKE_CURRENT_LIST_DIR})
 
 target_link_libraries(lab6 ${OpenCV_LIBS})
+
+set(CMAKE_CXX_STANDARD 20)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

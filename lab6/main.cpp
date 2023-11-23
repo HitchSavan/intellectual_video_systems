@@ -7,8 +7,6 @@
 
 int main(int argc, char* argv[]) {
 
-    cv::Mat src_prev;
-    cv::Mat src_cur;
     cv::Mat src_prev_colour;
     cv::Mat src_cur_colour;
 
@@ -20,29 +18,30 @@ int main(int argc, char* argv[]) {
         src_cur_colour = cv::imread(argv[2]);
     }
 
-    cv::cvtColor(src_prev_colour, src_prev, cv::COLOR_BGR2GRAY);
-    cv::cvtColor(src_cur_colour, src_cur, cv::COLOR_BGR2GRAY);
-
     std::unordered_map<std::string, cv::Mat> output_imgs;
 
-    output_imgs["vectors"] = cv::Mat();
-    output_imgs["filteredVectors"] = cv::Mat();
-    output_imgs["clusterized"] = cv::Mat();
+    output_imgs["vectors"] = src_cur_colour.clone();
+    output_imgs["filteredVectors"] = src_cur_colour.clone();
+    output_imgs["clusterized"] = src_cur_colour.clone();
 
+    getVectorsImg(src_prev_colour, src_cur_colour, 15, output_imgs);
 
 
     std::string output_folder = "output";
     std::string create_folder = "mkdir " + output_folder;
     system(create_folder.c_str());
     output_folder += "/";
+
+    cv::imwrite(output_folder + "vectors.jpg", output_imgs["vectors"]);
     
     int confirm = 0;
     std::cout << "\nShow all? (0/1) ";
     std::cin >> confirm;
 
     if (confirm) {
-        show_img("inputL", src_prev);
-        show_img("inputR", src_cur);
+        show_img("inputL", src_prev_colour);
+        show_img("inputR", src_cur_colour);
+        show_img("vectors", output_imgs["vectors"]);
         cv::waitKey(0);
     }
     std::cout << "\n";

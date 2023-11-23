@@ -1,3 +1,4 @@
+#include <opencv2/opencv.hpp>
 // checklist
     // 1. разбиение изображения на блоки NхN.
     // 2. совмещение блоков текущего кадра с блоками предыдущего, оценка степени соответствия.
@@ -16,18 +17,47 @@
     // 1.
     // 2.1.
     // 2.2.
+    // vectors
+
+namespace lab6
+{
+    class Point : public cv::Point {
+
+        using cv::Point::Point;
+
+        friend bool operator<(const Point& l, const Point& r)
+        {
+            return l.x < r.x ? true : (l.x == r.x ? l.y < r.y : false);
+        }
+
+        friend bool operator>(const Point& l, const Point& r)
+        {
+            return r < l;
+        }
+    };
+}
+
+void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, cv::Point> &vectors)
+{
+    output_img = input_img.clone();
+
+    for (auto &vector : vectors)
+    {
+        cv::arrowedLine(output_img, vector.first, vector.second, cv::Scalar(255, 0, 0, 255));
+    }
+}
 
 double getCorrelation(const cv::Mat &previous, const cv::Mat &current)
 {
     double sumMAD = 0;
-    cv::Mat diff = cv::Mat(current.size(), CV_32FC1);
+    cv::Mat diff; // = cv::Mat(current.size(), CV_32FC1);
     cv::absdiff(previous, current, diff);
 
     for (int i = 0; i < diff.cols; ++i)
     {
         for (int j = 0; j < diff.rows; ++j)
         {
-            sumMAD += diff.at<float>(j, i);
+            sumMAD += diff.at<uchar>(j, i);
         }
     }
 
@@ -37,39 +67,53 @@ double getCorrelation(const cv::Mat &previous, const cv::Mat &current)
 cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame, int step, int iteration, cv::Point centralBlock)
 {
     std::map<double, cv::Point> blocksResults;
+    double central_result = 0;
 
-    for (int i = -step; i < centralBlock.x + step; i += step)
+    for (int i = centralBlock.x - step; i <= centralBlock.x + step; i += step)
     {
-        for (int j = -step; j < centralBlock.y + step; j += step)
+        for (int j = centralBlock.y - step; j <= centralBlock.y + step; j += step)
         {
             double result = getCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
             blocksResults[result] = {i, j};
+
+            if (i == centralBlock.x && j == centralBlock.y)
+            {
+                central_result = result;
+            }
         }
     }
 
-    if (blocksResults.begin()->second == centralBlock || iteration == 3) {
-        return blocksResults.begin()->second;
+    if (blocksResults.begin()->second == centralBlock || blocksResults.begin()->first == central_result || iteration == 3) {
+        return centralBlock;
     } else {
         return compare_3SS(previousBlock, currentFrame, step/2, iteration+1, blocksResults.begin()->second);
     }
 }
 
-void getVectorsImg(const cv::Mat &previous, const cv::Mat &current, int blockSize, std::unordered_map<std::string, cv::Mat> &output)
+void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int blockSize, std::unordered_map<std::string, cv::Mat> &output_imgs)
 {
+    cv::Mat src_prev;
+    cv::Mat src_cur;
+
+    cv::cvtColor(previous_img, src_prev, cv::COLOR_BGR2GRAY);
+    cv::cvtColor(current_img, src_cur, cv::COLOR_BGR2GRAY);
+
     // draw vector - arrowedLine()
     cv::Mat prevBlock;
     cv::Mat curBlock;
 
-    std::unordered_map<cv::Point, cv::Point> vectors;
+    std::map<lab6::Point, cv::Point> vectors;
     cv::Point destination;
 
-    for (int i = 0; i < current.cols - blockSize; i += blockSize)
+    for (int i = blockSize*6; i < src_cur.cols - blockSize*6; i += blockSize)
     {
-        for (int j = 0; j < current.rows - blockSize; j += blockSize)
+        for (int j = blockSize*6; j < src_cur.rows - blockSize*6; j += blockSize)
         {
-            prevBlock = previous(cv::Rect(i, j, blockSize, blockSize));
+            prevBlock = src_prev(cv::Rect(i, j, blockSize, blockSize));
 
-            destination = compare_3SS(prevBlock, current, 4*blockSize, 1, cv::Point(i, j));
+            vectors[lab6::Point(i, j)] = compare_3SS(prevBlock, src_cur, 4*blockSize, 1, cv::Point(i, j));
         }
     }
+
+    drawVectors(current_img, output_imgs["vectors"], vectors);
 }
