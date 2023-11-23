@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     output_imgs["filteredVectors"] = src_cur_colour.clone();
     output_imgs["clusterized"] = src_cur_colour.clone();
 
-    getVectorsImg(src_prev_colour, src_cur_colour, 15, output_imgs);
+    getVectorsImg(src_prev_colour, src_cur_colour, 5, output_imgs);
 
 
     std::string output_folder = "output";
