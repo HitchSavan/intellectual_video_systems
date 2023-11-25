@@ -35,15 +35,67 @@ namespace lab6
             return r < l;
         }
     };
+    struct MoveVector {
+        MoveVector(cv::Point _start, cv::Point _end) {
+            start = _start;
+            end = _end;
+            coords = _end - _start;
+        }
+
+        // codirectional vectors
+        friend bool operator==(const MoveVector& l, const MoveVector& r)
+        {
+            if (l.coords.x / r.coords.x == l.coords.y / r.coords.y)
+            {
+                return 0 < (l.coords.x * r.coords.x + l.coords.y * r.coords.y);
+            }
+            return false;
+        }
+
+        double distance(const MoveVector& r)
+        {
+            return std::sqrt(std::pow(start.x - r.start.x, 2) + std::pow(start.y - r.start.y, 2));
+        }
+        
+        cv::Point start;
+        cv::Point end;
+        cv::Point coords;
+    };
 }
 
-void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, cv::Point> &vectors)
+void fiterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vectors)
+{
+    int border = vectors.begin()->first.x;
+
+    for (int i = border + stepSize; i < vectors.rbegin()->first.x; i += stepSize*2)
+    {
+        for (int j = border + stepSize; j < vectors.rbegin()->first.y; j += stepSize*2)
+        {
+
+            double min = INT_MAX;
+            cv::Point minCoords;
+            
+
+            for (int ii = -stepSize; ii <= stepSize; ii += stepSize)
+            {
+                for (int jj = -stepSize; jj <= stepSize; jj += stepSize)
+                {
+                    if (jj == 00 && ii == 00)
+                        continue;
+                    
+                }
+            }
+        }
+    }
+}
+
+void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, lab6::MoveVector> &vectors)
 {
     output_img = input_img.clone();
 
     for (auto &vector : vectors)
     {
-        cv::arrowedLine(output_img, vector.first, vector.second, cv::Scalar(255, 0, 0, 255));
+        cv::arrowedLine(output_img, vector.second.start, vector.second.end, cv::Scalar(255, 0, 0, 255));
     }
 }
 
@@ -102,7 +154,7 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
     cv::Mat prevBlock;
     cv::Mat curBlock;
 
-    std::map<lab6::Point, cv::Point> vectors;
+    std::map<lab6::Point, lab6::MoveVector> vectors;
     cv::Point destination;
 
     for (int i = blockSize*6; i < src_cur.cols - blockSize*6; i += blockSize)
@@ -111,7 +163,7 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
         {
             prevBlock = src_prev(cv::Rect(i, j, blockSize, blockSize));
 
-            vectors[lab6::Point(i, j)] = compare_3SS(prevBlock, src_cur, 4*blockSize, 1, cv::Point(i, j));
+            vectors[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), compare_3SS(prevBlock, src_cur, 4*blockSize, 1, cv::Point(i, j)));
         }
     }
 
