@@ -7,12 +7,14 @@
 
 int main(int argc, char* argv[]) {
 
+    int blockSize = 5;
+
     cv::Mat src_prev_colour;
     cv::Mat src_cur_colour;
 
     if ( argc <=2 ) {
-        src_prev_colour = cv::imread("p1_1.jpg");
-        src_cur_colour = cv::imread("p1_2.jpg");
+        src_prev_colour = cv::imread("p2_1.jpg");
+        src_cur_colour = cv::imread("p2_2.jpg");
     } else if ( argc == 3 ) {
         src_prev_colour = cv::imread(argv[1]);
         src_cur_colour = cv::imread(argv[2]);
@@ -24,7 +26,7 @@ int main(int argc, char* argv[]) {
     output_imgs["filteredVectors"] = src_cur_colour.clone();
     output_imgs["clusterized"] = src_cur_colour.clone();
 
-    getVectorsImg(src_prev_colour, src_cur_colour, 5, output_imgs);
+    getVectorsImg(src_prev_colour, src_cur_colour, blockSize, output_imgs);
 
 
     std::string output_folder = "output";
@@ -33,6 +35,8 @@ int main(int argc, char* argv[]) {
     output_folder += "/";
 
     cv::imwrite(output_folder + "vectors.jpg", output_imgs["vectors"]);
+    cv::imwrite(output_folder + "filteredVectors.jpg", output_imgs["filteredVectors"]);
+    cv::imwrite(output_folder + "clusterized.jpg", output_imgs["clusterized"]);
     
     int confirm = 0;
     std::cout << "\nShow all? (0/1) ";
@@ -42,6 +46,8 @@ int main(int argc, char* argv[]) {
         show_img("inputL", src_prev_colour);
         show_img("inputR", src_cur_colour);
         show_img("vectors", output_imgs["vectors"]);
+        show_img("filteredVectors", output_imgs["filteredVectors"]);
+        show_img("clusterized", output_imgs["clusterized"]);
         cv::waitKey(0);
     }
     std::cout << "\n";
