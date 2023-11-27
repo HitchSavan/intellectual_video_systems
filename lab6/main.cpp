@@ -13,8 +13,8 @@ int main(int argc, char* argv[]) {
     cv::Mat src_cur_colour;
 
     if ( argc <=2 ) {
-        src_prev_colour = cv::imread("p2_1.jpg");
-        src_cur_colour = cv::imread("p2_2.jpg");
+        src_prev_colour = cv::imread("p1_1.jpg");
+        src_cur_colour = cv::imread("p1_2.jpg");
     } else if ( argc == 3 ) {
         src_prev_colour = cv::imread(argv[1]);
         src_cur_colour = cv::imread(argv[2]);
@@ -28,7 +28,7 @@ int main(int argc, char* argv[]) {
 
     getVectorsImg(src_prev_colour, src_cur_colour, blockSize, output_imgs);
 
-
+    std::cout << std::endl;
     std::string output_folder = "output";
     std::string create_folder = "mkdir " + output_folder;
     system(create_folder.c_str());
