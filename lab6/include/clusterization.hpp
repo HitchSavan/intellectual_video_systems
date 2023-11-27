@@ -303,6 +303,8 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
     drawVectors(src_bordered, output_imgs["vectors"], vectors);
 
 
+    filterVectors(blockSize*3, vectors, vectorsFiltered);
+    filterVectors(blockSize*2, vectorsFiltered, vectors);
     filterVectors(blockSize, vectors, vectorsFiltered);
     drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered);
 
