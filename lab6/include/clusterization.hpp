@@ -211,9 +211,9 @@ cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame,
     std::map<double, cv::Point> blocksResults;
     double central_result = 0;
 
-    for (int i = centralBlock.x - step; i <= centralBlock.x + step; i += step)
+    for (int i = centralBlock.x - step; i < centralBlock.x + step; i += step)
     {
-        for (int j = centralBlock.y - step; j <= centralBlock.y + step; j += step)
+        for (int j = centralBlock.y - step; j < centralBlock.y + step; j += step)
         {
             double result = getCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
             blocksResults[result] = {i, j};
@@ -274,6 +274,8 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
 
     cv::cvtColor(previous_img, src_prev, cv::COLOR_BGR2GRAY);
     cv::cvtColor(current_img, src_cur, cv::COLOR_BGR2GRAY);
+    cv::copyMakeBorder(src_prev, src_prev, blockSize*7, blockSize*7, blockSize*7, blockSize*7, cv::BORDER_CONSTANT, cv::Scalar(0));
+    cv::copyMakeBorder(src_cur, src_cur, blockSize*7, blockSize*7, blockSize*7, blockSize*7, cv::BORDER_CONSTANT, cv::Scalar(0));
 
     // draw vector - arrowedLine()
     cv::Mat prevBlock;
@@ -284,9 +286,9 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
     cv::Point destination;
 
     std::cout << "Recursive 3SS..." << std::endl;
-    for (int i = blockSize*6; i < src_cur.cols - blockSize*6; i += blockSize)
+    for (int i = blockSize*7; i < src_cur.cols - blockSize*6; i += blockSize)
     {
-        for (int j = blockSize*6; j < src_cur.rows - blockSize*6; j += blockSize)
+        for (int j = blockSize*7; j < src_cur.rows - blockSize*6; j += blockSize)
         {
             prevBlock = src_prev(cv::Rect(i, j, blockSize, blockSize));
 
@@ -295,11 +297,19 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
         progressbar(src_cur.cols - blockSize*6, i);
     }
 
-    drawVectors(previous_img, output_imgs["vectors"], vectors);
+    cv::Mat src_bordered;
+    cv::copyMakeBorder(previous_img, src_bordered, blockSize*7, blockSize*7, blockSize*7, blockSize*7, cv::BORDER_CONSTANT, cv::Scalar(0));
+
+    drawVectors(src_bordered, output_imgs["vectors"], vectors);
 
 
     filterVectors(blockSize, vectors, vectorsFiltered);
-    drawVectors(previous_img, output_imgs["filteredVectors"], vectorsFiltered);
+    drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered);
 
-    classify(previous_img, output_imgs["clusterized"], vectorsFiltered, blockSize/2);
+    classify(src_bordered, output_imgs["clusterized"], vectorsFiltered, blockSize/2);
+    
+    for (auto &imgs: output_imgs)
+    {
+        imgs.second = imgs.second(cv::Rect(blockSize*7, blockSize*7, previous_img.cols, previous_img.rows));
+    }
 }
