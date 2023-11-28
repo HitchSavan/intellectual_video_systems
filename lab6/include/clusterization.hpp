@@ -189,15 +189,8 @@ void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vector
                     }
                 }
             }
-                
-            for (int vX = -stepSize; vX <= stepSize; vX += stepSize)
-            {
-                for (int vY = -stepSize; vY <= stepSize; vY += stepSize)
-                {
-                    vectorsOut[lab6::Point(i + vX, j + vY)] = lab6::MoveVector(cv::Point(i + vX, j + vY), cv::Point(i + vX, j + vY) + (empty ? cv::Point(0, 0) : minCoords));
-                }
-            }
-
+            
+            vectorsOut[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), cv::Point(i, j) + (empty ? cv::Point(0, 0) : minCoords));
         }
 
         progressbar((float)(vectors.rbegin()->first.x - stepSize), i);
@@ -241,7 +234,7 @@ cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame,
         for (int j = centralBlock.y - step; j < centralBlock.y + step; j += step)
         {
             double result = getCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
-            blocksResults[result] = {i, j};
+            blocksResults[result] = cv::Point(i, j);
 
             if (i == centralBlock.x && j == centralBlock.y)
             {
@@ -250,8 +243,8 @@ cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame,
         }
     }
 
-    if (blocksResults.begin()->second == centralBlock || blocksResults.begin()->first == central_result || iteration == 3) {
-        return centralBlock;
+    if (iteration == 3) {
+        return blocksResults.begin()->second;
     } else {
         return compare_3SS(previousBlock, currentFrame, step/2, iteration+1, blocksResults.begin()->second);
     }
@@ -274,7 +267,7 @@ void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Poin
         {
             for (int i = 0; i < 3; ++i)
             {
-                colorizedVectors[lab6::Point(vector.second.coords)].push_back(55 + std::rand()%200);
+                colorizedVectors[lab6::Point(vector.second.coords)].push_back(std::rand()%255);
             }
         }
 
@@ -326,8 +319,9 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
 
     drawVectors(src_bordered, output_imgs["vectors"], vectors);
 
-    recursiveVectorFilter(blockSize, vectors);
-    vectorsFiltered = vectors;
+    // recursiveVectorFilter(blockSize, vectors);
+    // vectorsFiltered = vectors;
+    filterVectors(blockSize, vectors, vectorsFiltered);
     
     drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered);
 
