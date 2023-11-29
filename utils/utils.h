@@ -6,8 +6,12 @@
 #include "wtypes.h"
 #include <opencv2/opencv.hpp>
 
-int progressbar(float total_items, int iter, int bar_len = 40)
+int progressbar(float total_items, int iter, int step = 0, int bar_len = 40)
 {
+    if (step != 0)
+        if ((int)(100 * iter / total_items) % step > 0)
+            return iter;
+
     int filled_len = int(float(bar_len * iter) / total_items);
     double percents = 100.0 * float(iter) / total_items;
     std::string bar = "";
