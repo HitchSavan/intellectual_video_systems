@@ -1,25 +1,5 @@
 #include <opencv2/opencv.hpp>
 #include <utils/utils.h>
-// checklist
-    // 1. разбиение изображения на блоки NхN.
-    // 2. совмещение блоков текущего кадра с блоками предыдущего, оценка степени соответствия.
-        // 2.1. совмещение алгоритмом 3SS:
-            // I. вычисл. целевой функции в 9 блоках, образ. квадрат, на расстоянии d друг от друга.
-            // II. выч. в 8 блоках, вокруг наибольшей корреляции, на расстоянии d/2. 
-            // III. повтор II. на расстоянии d/4, наибольшая корреляция - конец вектора.
-        // 2.2. минимизация целевой функции MAD - сумма абс. разности блоков попиксельно, деленная на площадь блока.
-    // 3. Медианная фильтрация (мб для каждого пикселя хранить коорд начала и конца вектора, сравнивать направление, усреднять).
-    // 4. Алг кластеризации.
-        // 4.1. Последовательный перебор блоков, метка ненулевых векторов, если не помечены.
-        // 4.2. Проверка 8 его соседей.
-        // 4.3. Если вектора в какой-то степени сонаправленные - метим их одинаково.
-
-// ready
-    // 1.
-    // 2.1.
-    // 2.2.
-    // vectors
-    // 3 ??
 
 namespace lab6
 {
@@ -97,8 +77,9 @@ namespace lab6
     };
 }
 
-void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vectors, std::map<lab6::Point, lab6::MoveVector> &vectorsOut)
+void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vectors, std::map<lab6::Point, lab6::MoveVector> &vectorsOut, bool fullFill)
 {
+    vectorsOut = vectors;
     std::cout << std::endl << "Filtering vectors... " << std::endl;
 
     for (int i = vectors.begin()->first.x + stepSize; i < vectors.rbegin()->first.x; i += stepSize)
@@ -139,7 +120,18 @@ void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vector
                 }
             }
             
-            vectorsOut[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), cv::Point(i, j) + minCoords);
+            if (fullFill)
+            {
+                for (int vX = -stepSize; vX <= stepSize; vX += stepSize)
+                {
+                    for (int vY = -stepSize; vY <= stepSize; vY += stepSize)
+                    {
+                        vectorsOut[lab6::Point(i + vX, j + vY)].update(minCoords);
+                    }
+                }
+            } else {
+                vectorsOut[lab6::Point(i, j)].update(minCoords);
+            }
         }
 
         progressbar((float)(vectors.rbegin()->first.x - stepSize), i, 10);
@@ -257,6 +249,9 @@ void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Poin
                 colorizedVectors[vector.first].push_back(std::rand()%254);
         }
 
+        if (vector.second.coords == cv::Point(0, 0))
+            continue;
+
         recursiveClassify(mask, colorizedVectors, vectors, vector, blockSize);
 
         fillArea(input_img, output_img, vector.first, colorizedVectors[vector.first], blockSize);
@@ -299,10 +294,9 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
     cv::Mat src_bordered;
     cv::copyMakeBorder(previous_img, src_bordered, blockSize*7, blockSize*7, blockSize*7, blockSize*7, cv::BORDER_CONSTANT, cv::Scalar(0));
 
-    drawVectors(src_bordered, output_imgs["vectors"], vectors);
+    filterVectors(blockSize, vectors, vectorsFiltered, false);
 
-    // recursiveVectorFilter(blockSize, vectors, vectorsFiltered);
-    filterVectors(blockSize, vectors, vectorsFiltered);
+    drawVectors(src_bordered, output_imgs["vectors"], vectors);
     
     drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered);
 
