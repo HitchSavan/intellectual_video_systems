@@ -97,71 +97,13 @@ namespace lab6
     };
 }
 
-// not-so-recursive
-void recursiveVectorFilter(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vectors, std::map<lab6::Point, lab6::MoveVector> &vectorsOut)
-{
-    vectorsOut = vectors;
-    int border = vectorsOut.begin()->first.x;
-
-    std::cout << std::endl << "Recursive filtering vectors... " << std::endl;
-
-    for (int i = border + stepSize; i < vectorsOut.rbegin()->first.x; i += stepSize)
-    {
-        for (int j = border + stepSize; j < vectorsOut.rbegin()->first.y; j += stepSize)
-        {
-            if(vectorsOut[lab6::Point(i, j)].coords == cv::Point(0, 0))
-                continue;
-                
-            int emptyAmount = 0;
-            double minDist = INT_MAX;
-            cv::Point minCoords = cv::Point(0, 0);
-            
-            for (int vX = -stepSize; vX <= stepSize; vX += stepSize)
-            {
-                for (int vY = -stepSize; vY <= stepSize; vY += stepSize)
-                {
-                    double curDist = 0;
-
-                    if(vectorsOut[lab6::Point(i + vX, j + vY)].coords == cv::Point(0, 0))
-                    {
-                        continue;
-                    }
-
-                    for (int ii = -stepSize; ii <= stepSize; ii += stepSize)
-                    {
-                        for (int jj = -stepSize; jj <= stepSize; jj += stepSize)
-                        {
-                            if ((ii == vX && jj == vY) || vectorsOut[lab6::Point(i + ii, j + jj)].coords == cv::Point(0, 0))
-                                continue;
-
-                            curDist += vectorsOut[lab6::Point(i + vX, j + vY)].distance( vectorsOut[lab6::Point(i + ii, j + jj)] );
-                        }
-                    }
-
-                    if (curDist < minDist)
-                    {
-                        minDist = curDist;
-                        minCoords = vectorsOut[lab6::Point(i + vX, j + vY)].coords;
-                    }
-                }
-            }
-                
-            vectorsOut[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), cv::Point(i, j) + minCoords);
-        }
-
-        progressbar((float)(vectorsOut.rbegin()->first.x - stepSize), i, 10);
-    }
-}
-
 void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vectors, std::map<lab6::Point, lab6::MoveVector> &vectorsOut)
 {
-    int border = vectors.begin()->first.x;
-
     std::cout << std::endl << "Filtering vectors... " << std::endl;
 
-    for (int i = border + stepSize; i < vectors.rbegin()->first.x; i += stepSize)
+    for (int i = vectors.begin()->first.x + stepSize; i < vectors.rbegin()->first.x; i += stepSize)
     {
-        for (int j = border + stepSize; j < vectors.rbegin()->first.y; j += stepSize)
+        for (int j = vectors.begin()->first.x + stepSize; j < vectors.rbegin()->first.y; j += stepSize)
         {
             if(vectors[lab6::Point(i, j)].coords == cv::Point(0, 0))
                 continue;
@@ -217,10 +159,10 @@ void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::P
     }
 }
 
-double getCorrelation(const cv::Mat &previous, const cv::Mat &current)
+double getMADCorrelation(const cv::Mat &previous, const cv::Mat &current)
 {
     double sumMAD = 0;
-    cv::Mat diff; // = cv::Mat(current.size(), CV_32FC1);
+    cv::Mat diff;
     cv::absdiff(previous, current, diff);
 
     for (int i = 0; i < diff.cols; ++i)
@@ -243,7 +185,7 @@ cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame,
     {
         for (int j = centralBlock.y - step; j < centralBlock.y + step; j += step)
         {
-            double result = getCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
+            double result = getMADCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
             blocksResults[result] = cv::Point(i, j);
 
             if (i == centralBlock.x && j == centralBlock.y)
@@ -274,12 +216,33 @@ void fillArea(const cv::Mat &input_img, cv::Mat &output_img, const lab6::Point &
     }
 }
 
+void recursiveClassify(cv::Mat &mask, std::map<lab6::Point, std::vector<int>> &colorizedVectors, std::map<lab6::Point, lab6::MoveVector> &vectors, std::pair<const lab6::Point, lab6::MoveVector> &curVector, int blockSize)
+{
+    for (int i = -blockSize; i <= blockSize; i += blockSize)
+    {
+        for (int j = -blockSize; j <= blockSize; j += blockSize)
+        {
+            lab6::Point neighbourVector(curVector.first.x + i, curVector.first.y + j);
+            if (neighbourVector == curVector.first || mask.at<uchar>(neighbourVector) != 0)
+                continue;
+
+            if (vectors.count(neighbourVector) != 0 && vectors[neighbourVector].coords != cv::Point(0, 0))
+            {
+                if (curVector.second.getCos(vectors[neighbourVector]) >= 0)
+                {
+                    mask.at<uchar>(neighbourVector) = mask.at<uchar>(curVector.first);
+                    colorizedVectors[neighbourVector] = colorizedVectors[curVector.first];
+                    recursiveClassify(mask, colorizedVectors, vectors, std::pair<const lab6::Point, lab6::MoveVector>(neighbourVector, vectors[neighbourVector]), blockSize);
+                }
+            }
+        }
+    }
+}
+
 void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, lab6::MoveVector> &vectors, int blockSize)
 {
     output_img = input_img.clone();
     cv::Mat mask = cv::Mat::zeros(input_img.size(), CV_8U);
-
-    std::vector<int> color;
 
     std::map<lab6::Point, std::vector<int>> colorizedVectors;
 
@@ -287,38 +250,14 @@ void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Poin
     int cur = 0;
     for (auto &vector : vectors)
     {
-        if (vector.second.coords == cv::Point(0, 0))
-            continue;
-
-        if (mask.at<uchar>(lab6::Point(vector.first)) == 0)
+        if (mask.at<uchar>(vector.first) == 0)
         {
-            mask.at<uchar>(lab6::Point(vector.first)) = std::rand()%255;
+            mask.at<uchar>(vector.first) = std::rand()%254;
             for (int k = 0; k < 3; ++k)
-                colorizedVectors[lab6::Point(vector.first)].push_back(std::rand()%255);
+                colorizedVectors[vector.first].push_back(std::rand()%254);
         }
 
-        for (int i = -blockSize; i <= blockSize; i += blockSize)
-        {
-            for (int j = -blockSize; j <= blockSize; j += blockSize)
-            {
-                lab6::Point neighbourVector(vector.first.x + i, vector.first.y + j);
-                if (vectors.count(neighbourVector) != 0 && vectors[neighbourVector].coords != cv::Point(0, 0))
-                {
-                    
-                    if (mask.at<uchar>(neighbourVector) != 0 && mask.at<uchar>(neighbourVector) != mask.at<uchar>(lab6::Point(vector.first)) && vector.second.getCos(vectors[neighbourVector]) >= 0)
-                    {
-                        std::cout << "\nColor mismatch " << mask.at<uchar>(lab6::Point(vector.first)) << " ("
-                            << lab6::Point(vector.first) << "), but already has " << mask.at<uchar>(neighbourVector) << "(" << neighbourVector << ")";
-                    }
-
-                    if (vector.second.getCos(vectors[neighbourVector]) >= 0)
-                    {
-                        mask.at<uchar>(neighbourVector) = mask.at<uchar>(lab6::Point(vector.first));
-                        colorizedVectors[neighbourVector] = colorizedVectors[lab6::Point(vector.first)];
-                    }
-                }
-            }
-        }
+        recursiveClassify(mask, colorizedVectors, vectors, vector, blockSize);
 
         fillArea(input_img, output_img, vector.first, colorizedVectors[vector.first], blockSize);
 
