@@ -138,17 +138,35 @@ void filterVectors(int stepSize, std::map<lab6::Point, lab6::MoveVector> &vector
     }
 }
 
-void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, lab6::MoveVector> &vectors)
+void drawVectors(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Point, lab6::MoveVector> &vectors, int shift)
 {
     output_img = input_img.clone();
+    cv::Point shiftPoint(shift, shift);
 
     std::cout << std::endl << "Drawing silly little arrows... " << std::endl;
     int cur = 0;
     for (auto &vector : vectors)
     {
-        cv::arrowedLine(output_img, vector.second.start, vector.second.end, cv::Scalar(255, 0, 0, 255));
+        cv::arrowedLine(output_img, vector.second.start + shiftPoint, vector.second.end + shiftPoint, cv::Scalar(255, 0, 0, 255));
         progressbar((float)(vectors.size()), ++cur, 5);
     }
+}
+
+double getMSECorrelation(const cv::Mat &previous, const cv::Mat &current)
+{
+    double sumMSE = 0;
+    cv::Mat diff;
+    cv::absdiff(previous, current, diff);
+
+    for (int i = 0; i < diff.cols; ++i)
+    {
+        for (int j = 0; j < diff.rows; ++j)
+        {
+            sumMSE += std::pow(diff.at<uchar>(j, i), 2);
+        }
+    }
+
+    return (sumMSE / (diff.rows * diff.cols));
 }
 
 double getMADCorrelation(const cv::Mat &previous, const cv::Mat &current)
@@ -165,25 +183,19 @@ double getMADCorrelation(const cv::Mat &previous, const cv::Mat &current)
         }
     }
 
-    return sumMAD / (diff.rows * diff.cols);
+    return (sumMAD / (diff.rows * diff.cols));
 }
 
 cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame, int step, int iteration, cv::Point centralBlock)
 {
     std::map<double, cv::Point> blocksResults;
-    double central_result = 0;
 
-    for (int i = centralBlock.x - step; i < centralBlock.x + step; i += step)
+    for (int i = centralBlock.x - step; i <= centralBlock.x + step; i += step)
     {
-        for (int j = centralBlock.y - step; j < centralBlock.y + step; j += step)
+        for (int j = centralBlock.y - step; j <= centralBlock.y + step; j += step)
         {
-            double result = getMADCorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
+            double result = getMSECorrelation(previousBlock, currentFrame(cv::Rect(i, j, previousBlock.cols, previousBlock.rows)));
             blocksResults[result] = cv::Point(i, j);
-
-            if (i == centralBlock.x && j == centralBlock.y)
-            {
-                central_result = result;
-            }
         }
     }
 
@@ -192,6 +204,27 @@ cv::Point compare_3SS(const cv::Mat &previousBlock, const cv::Mat &currentFrame,
     } else {
         return compare_3SS(previousBlock, currentFrame, step/2, iteration+1, blocksResults.begin()->second);
     }
+}
+
+cv::Point compare_FS(const cv::Mat &previousBlock, const cv::Mat &currentFrame)
+{
+    cv::Mat result;
+
+    int result_cols = currentFrame.cols - previousBlock.cols + 1;
+    int result_rows = currentFrame.rows - previousBlock.rows + 1;
+    result.create(result_rows, result_cols, CV_32FC1);
+    
+    matchTemplate(currentFrame, previousBlock, result, cv::TemplateMatchModes::TM_CCOEFF);
+    normalize(result, result, 0, 1, cv::NORM_MINMAX, -1, cv::Mat());
+    
+    double minVal;
+    double maxVal;
+    cv::Point minLoc;
+    cv::Point maxLoc;
+    
+    minMaxLoc(result, &minVal, &maxVal, &minLoc, &maxLoc, cv::Mat());
+    
+    return minLoc;
 }
 
 void fillArea(const cv::Mat &input_img, cv::Mat &output_img, const lab6::Point &topLeftCoords, std::vector<int> &color, int blockSize)
@@ -208,7 +241,7 @@ void fillArea(const cv::Mat &input_img, cv::Mat &output_img, const lab6::Point &
     }
 }
 
-void recursiveClassify(cv::Mat &mask, std::map<lab6::Point, std::vector<int>> &colorizedVectors, std::map<lab6::Point, lab6::MoveVector> &vectors, std::pair<const lab6::Point, lab6::MoveVector> &curVector, int blockSize)
+void recursiveClassify(cv::Mat &mask, std::map<lab6::Point, std::vector<int>> &colorizedVectors, std::map<lab6::Point, lab6::MoveVector> &vectors, std::pair<const lab6::Point, lab6::MoveVector> &curVector, int blockSize, int iter)
 {
     for (int i = -blockSize; i <= blockSize; i += blockSize)
     {
@@ -220,11 +253,13 @@ void recursiveClassify(cv::Mat &mask, std::map<lab6::Point, std::vector<int>> &c
 
             if (vectors.count(neighbourVector) != 0 && vectors[neighbourVector].coords != cv::Point(0, 0))
             {
-                if (curVector.second.getCos(vectors[neighbourVector]) >= 0)
+                if (curVector.second.getCos(vectors[neighbourVector]) >= 0.0)
                 {
                     mask.at<uchar>(neighbourVector) = mask.at<uchar>(curVector.first);
                     colorizedVectors[neighbourVector] = colorizedVectors[curVector.first];
-                    recursiveClassify(mask, colorizedVectors, vectors, std::pair<const lab6::Point, lab6::MoveVector>(neighbourVector, vectors[neighbourVector]), blockSize);
+
+                    if (iter < 1)
+                        recursiveClassify(mask, colorizedVectors, vectors, std::pair<const lab6::Point, lab6::MoveVector>(neighbourVector, vectors[neighbourVector]), blockSize, iter+1);
                 }
             }
         }
@@ -242,6 +277,9 @@ void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Poin
     int cur = 0;
     for (auto &vector : vectors)
     {
+        if (vector.second.coords == cv::Point(0, 0))
+            continue;
+
         if (mask.at<uchar>(vector.first) == 0)
         {
             mask.at<uchar>(vector.first) = std::rand()%254;
@@ -249,10 +287,7 @@ void classify(const cv::Mat &input_img, cv::Mat &output_img, std::map<lab6::Poin
                 colorizedVectors[vector.first].push_back(std::rand()%254);
         }
 
-        if (vector.second.coords == cv::Point(0, 0))
-            continue;
-
-        recursiveClassify(mask, colorizedVectors, vectors, vector, blockSize);
+        recursiveClassify(mask, colorizedVectors, vectors, vector, blockSize, 0);
 
         fillArea(input_img, output_img, vector.first, colorizedVectors[vector.first], blockSize);
 
@@ -279,16 +314,17 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
     std::map<lab6::Point, lab6::MoveVector> vectorsFiltered;
     cv::Point destination;
 
-    std::cout << "Recursive 3SS..." << std::endl;
-    for (int i = blockSize*7; i < src_cur.cols - blockSize*6; i += blockSize)
+    std::cout << "Finding vectors..." << std::endl;
+    for (int i = blockSize*7; i < src_cur.cols - blockSize*7; i += blockSize)
     {
-        for (int j = blockSize*7; j < src_cur.rows - blockSize*6; j += blockSize)
+        for (int j = blockSize*7; j < src_cur.rows - blockSize*7; j += blockSize)
         {
             prevBlock = src_prev(cv::Rect(i, j, blockSize, blockSize));
 
             vectors[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), compare_3SS(prevBlock, src_cur, 4*blockSize, 1, cv::Point(i, j)));
+            // vectors[lab6::Point(i, j)] = lab6::MoveVector(cv::Point(i, j), cv::Point(i - blockSize, j - blockSize) + compare_FS(prevBlock, src_cur(cv::Rect(i - blockSize*3, j - blockSize*3, blockSize*3, blockSize*3))));
         }
-        progressbar((float)(src_cur.cols - blockSize*7), i, 5);
+        progressbar((float)(src_cur.cols - blockSize*8), i);
     }
 
     cv::Mat src_bordered;
@@ -296,9 +332,9 @@ void getVectorsImg(const cv::Mat &previous_img, const cv::Mat &current_img, int 
 
     filterVectors(blockSize, vectors, vectorsFiltered, false);
 
-    drawVectors(src_bordered, output_imgs["vectors"], vectors);
+    drawVectors(src_bordered, output_imgs["vectors"], vectors, blockSize/2);
     
-    drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered);
+    drawVectors(src_bordered, output_imgs["filteredVectors"], vectorsFiltered, blockSize/2);
 
     classify(src_bordered, output_imgs["clusterized"], vectorsFiltered, blockSize);
     
