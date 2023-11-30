@@ -44,7 +44,7 @@ void show_img(std::string window_name, cv::Mat img, double resize_koeff = 1)
     if ( resize_koeff == 1 ) {
         resize_koeff = (img.cols > maxw || img.rows > maxh) ? min((double)maxw / img.cols, (double)maxh / img.rows) : resize_koeff;
     }
-    cv::resizeWindow(window_name, img.cols * resize_koeff, img.rows * resize_koeff);
+    cv::resizeWindow(window_name, (int)(resize_koeff * img.cols), (int)(resize_koeff * img.rows));
     cv::imshow(window_name, img);
 }
 
